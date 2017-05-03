@@ -11,6 +11,12 @@
   <body>
     {% include "./partials/header.html.twig" %}
     <div class="container">
+      {% set flashes = app.session.flashbag.get('notice') %}
+      {% if flashes %}
+        {% for flashMessage in flashes %}
+          <div class="alert alert-info">{{ flashMessage }}</div>
+        {% endfor %}
+      {% endif %}
       {% block body %}{% endblock %}
       {% include "./partials/footer.html.twig" %}
     </div>

@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ user.name }} | {% endblock %}
+
+{% block body %}
+	<div class="row">
+	  <aside class="col-md-4">
+	    <section class="user_info">
+	      <h1>
+	        {{ user.name }}, {{ user.email }}
+	      </h1>
+	      <h2>{{ verified }}</h2>
+	    </section>
+	  </aside>
+	</div>
+{% endblock %}

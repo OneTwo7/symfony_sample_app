@@ -3,6 +3,14 @@
 {% block title %}Sign up | {% endblock %}
 
 {% block body %}
-	<h1>Users#new</h1>
-	<p>Find me in app/Resources/views/users/new.html.twig</p>
+	<div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Sign up</h3>
+    </div>
+    <div class="panel-body">
+      {{ form_start(form) }}
+      {{ form_widget(form) }}
+      {{ form_end(form) }}
+    </div>
+  </div>
 {% endblock %}
