@@ -2,21 +2,34 @@
 
 {% block body %}
 
-  {% if error %}
-    <div>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-  {% endif %}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Log in</h3>
+    </div>
+    <div class="panel-body">
+      {% if error %}
+        <div>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+      {% endif %}
+      
+      <form action="{{ path('login') }}" method="post">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="_username"
+               value="{{ last_username }}" class="form-control">
 
-  <form action="{{ path('login') }}" method="post">
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="_username"
-           value="{{ last_username }}" class="form-control">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="_password"
+               class="form-control">
 
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="_password" class="form-control">
+        <input type="checkbox" id="remember_me" name="_remember_me" checked />
+        <label for="remember_me">Keep me logged in</label>
 
-    <input type="hidden" name="_target_path" value="/">
+        <input type="hidden" name="_target_path" value="/">
 
-    <button type="submit" class="btn btn-primary">login</button>
-  </form>
+        <button type="submit" id="login_submit" class="btn btn-primary">
+          login
+        </button>
+      </form>
+    </div>
+  </div>
 
 {% endblock %}

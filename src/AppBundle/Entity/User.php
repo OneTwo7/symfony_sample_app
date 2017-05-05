@@ -40,7 +40,7 @@ class User implements UserInterface, \Serializable {
         $salt = random_bytes(22);
         $this->setPassword($encoder->encodePassword($raw, $salt));
     }
-
+    
     /**
      * @var int
      *

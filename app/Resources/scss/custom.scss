@@ -142,3 +142,15 @@ input, textarea, select, .uneditable-input {
 input {
   height: auto !important;
 }
+
+#remember_me {
+  display: inline-block;
+  margin-top: -10px;
+  margin-bottom: 20px;
+  width: auto;
+  margin-left: 0;
+}
+
+#login_submit {
+  display: block;
+}

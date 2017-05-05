@@ -28,6 +28,11 @@ security:
                 login_path: login
                 check_path: login
 
+            remember_me:
+                secret: '%secret%'
+                lifetime: 604800
+                path: /
+
             pattern: ^/
             http_basic: ~
             provider: my_db_provider
