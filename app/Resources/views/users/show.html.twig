@@ -1,15 +1,14 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ user.name }} | {% endblock %}
+{% block title %}{{ user.username }} | {% endblock %}
 
 {% block body %}
 	<div class="row">
 	  <aside class="col-md-4">
 	    <section class="user_info">
 	      <h1>
-	        {{ user.name }}, {{ user.email }}
+	        {{ user.username }}, {{ user.email }}
 	      </h1>
-	      <h2>{{ verified }}</h2>
 	    </section>
 	  </aside>
 	</div>

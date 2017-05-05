@@ -5,7 +5,8 @@ namespace AppBundle\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
-use AppBundle\Entity\AppUser;
+use AppBundle\Entity\User;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -16,7 +17,7 @@ class UserController extends Controller {
    * @Route("/users", name="user_index")
    */
   public function indexAction (Request $request) {
-    $users = $this->getDoctrine()->getRepository('AppBundle:AppUser')
+    $users = $this->getDoctrine()->getRepository('AppBundle:User')
     ->findAll();
     return $this->render('users/index.html.twig', [
         'users' => $users,
@@ -27,14 +28,11 @@ class UserController extends Controller {
    * @Route("/user/{id}", name="user_show")
    */
   public function showAction ($id) {
-    $user = $this->getDoctrine()->getRepository('AppBundle:AppUser')
+    $user = $this->getDoctrine()->getRepository('AppBundle:User')
     ->find($id);
 
-    $verified = $user->verify("foobar");
-
     return $this->render('users/show.html.twig', [
-        'user' => $user,
-        'verified' => $verified
+        'user' => $user
     ]);
   }
 
@@ -42,14 +40,14 @@ class UserController extends Controller {
    * @Route("/signup", name="signup")
    */
   public function createAction (Request $request) {
-    $user = new AppUser;
+    $user = new User;
 
     $form = $this->createFormBuilder($user)
-    ->add('name', TextType::class,
+    ->add('username', TextType::class,
       array('attr' => array('class' => 'form-control')))
     ->add('email', TextType::class,
       array('attr' => array('class' => 'form-control')))
-    ->add('password', PasswordType::class,
+    ->add('plain_password', PasswordType::class,
       array('attr' => array('class' => 'form-control')))
     ->add('password_confirmation', PasswordType::class,
       array('attr' => array('class' => 'form-control')))
@@ -59,14 +57,14 @@ class UserController extends Controller {
     $form->handleRequest($request);
 
     if ($form->isSubmitted() && $form->isValid()) {
-      $name = $form['name']->getData();
+      $username = $form['username']->getData();
       $email = $form['email']->getData();
-      $password = $form['password']->getData();
+      $plain_password = $form['plain_password']->getData();
       $password_confirmation = $form['password_confirmation']->getData();
 
-      $user->setName($name);
+      $user->setUsername($username);
       $user->setEmail($email);
-      $user->setPassword($password);
+      $user->setPlainPassword($plain_password);
       $user->setPasswordConfirmation($password_confirmation);
 
       $em = $this->getDoctrine()->getManager();
@@ -76,6 +74,10 @@ class UserController extends Controller {
       $this->addFlash('notice', 'Welcome to the Sample App!');
 
       $user_id = $user->getId();
+
+      $token = new UsernamePasswordToken($user, null, 'main', $user->getRoles());
+      $this->get('security.token_storage')->setToken($token);
+      $this->get('session')->set('_security_main', serialize($token));
 
       return $this->redirectToRoute('user_show', array('id' => $user_id));
     }
@@ -90,7 +92,7 @@ class UserController extends Controller {
    */
   public function deleteAction ($id) {
       $em = $this->getDoctrine()->getManager();
-      $user = $em->getRepository('AppBundle:AppUser')->find($id);
+      $user = $em->getRepository('AppBundle:User')->find($id);
 
       if (is_null($user)) {
           throw $this->createNotFoundException(

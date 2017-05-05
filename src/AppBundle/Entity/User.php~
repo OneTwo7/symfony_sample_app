@@ -4,22 +4,17 @@ namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Security\Core\User\UserInterface;
 use AppBundle\Encoder\CustomEncoder;
 
 /**
  * AppUser
  *
- * @ORM\Table(name="app_user", indexes={@ORM\Index(name="email_idx", columns={"email"})})
- * @ORM\Entity(repositoryClass="AppBundle\Repository\AppUserRepository")
+ * @ORM\Table(name="users", indexes={@ORM\Index(name="email_idx", columns={"email"})})
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\UserRepository")
  * @ORM\HasLifecycleCallbacks
  */
-class AppUser {
-
-    public function verify ($str) {
-        $encoder = new CustomEncoder;
-        $encoded = $this->getPasswordDigest();
-        return $encoder->isPasswordValid($encoded, $str, 'salt');
-    }
+class User implements UserInterface {
 
     /**
      *
@@ -41,9 +36,9 @@ class AppUser {
      */
     public function encodePassword () {
         $encoder = new CustomEncoder;
-        $raw = $this->getPassword();
+        $raw = $this->getPlainPassword();
         $salt = random_bytes(22);
-        $this->setPasswordDigest($encoder->encodePassword($raw, $salt));
+        $this->setPassword($encoder->encodePassword($raw, $salt));
     }
 
     /**
@@ -58,14 +53,14 @@ class AppUser {
     /**
      * @var string
      *
-     * @ORM\Column(name="name", type="string", length=54)
+     * @ORM\Column(type="string", length=54)
      * @Assert\NotBlank()
      * @Assert\Length(
      *      max = 54,
-     *      maxMessage = "Your name is too long (max: 50 characters)"
+     *      maxMessage = "Your username is too long (max: 50 characters)"
      * )
      */
-    private $name;
+    private $username;
 
     /**
      * @var string
@@ -84,30 +79,23 @@ class AppUser {
 
     /**
      * @Assert\NotBlank()
-     * @Assert\Length(
-     *      min=6,
-     *      minMessage = "Your password is too short (min: 6 characters)",
-     *      max=4096,
-     *      maxMessage = "Your password is too long (max: 4096 characters)"
-     * )
+     * @Assert\Length(max=4096)
      */
-    private $password;
+    private $plainPassword;
 
     /**
      * @Assert\NotBlank()
      * @Assert\Expression(
-     *      "this.getPassword() === this.getPasswordConfirmation()",
-     *      message="Password and password confirmation don't match!"
+     *      "this.getPlainPassword() === this.getPasswordConfirmation()",
+     *      message="Password confirmation doesn't match password!"
      * )
      */
     private $passwordConfirmation;
 
     /**
-     * @var string
-     *
-     * @ORM\Column(name="password_digest", type="string", length=64)
+     * @ORM\Column(type="string", length=64)
      */
-    private $passwordDigest;
+    private $password;
 
     /**
      * @var \DateTime
@@ -135,27 +123,27 @@ class AppUser {
     }
 
     /**
-     * Set name
+     * Set username
      *
-     * @param string $name
+     * @param string $username
      *
      * @return AppUser
      */
-    public function setName($name)
+    public function setUsername($username)
     {
-        $this->name = $name;
+        $this->username = $username;
 
         return $this;
     }
 
     /**
-     * Get name
+     * Get username
      *
      * @return string
      */
-    public function getName()
+    public function getUsername()
     {
-        return $this->name;
+        return $this->username;
     }
 
     /**
@@ -183,37 +171,37 @@ class AppUser {
     }
 
     /**
-     * Set passwordDigest
+     * Set password
      *
-     * @param string $passwordDigest
+     * @param string $password
      *
      * @return AppUser
      */
-    public function setPasswordDigest($passwordDigest)
+    public function setPassword($password)
     {
-        $this->passwordDigest = $passwordDigest;
-
-        return $this;
-    }
-
-    /**
-     * Get passwordDigest
-     *
-     * @return string
-     */
-    public function getPasswordDigest()
-    {
-        return $this->passwordDigest;
-    }
-
-    public function setPassword ($password) {
         $this->password = $password;
 
         return $this;
     }
 
-    public function getPassword () {
+    /**
+     * Get password
+     *
+     * @return string
+     */
+    public function getPassword()
+    {
         return $this->password;
+    }
+
+    public function setPlainPassword ($plainPassword) {
+        $this->plainPassword = $plainPassword;
+
+        return $this;
+    }
+
+    public function getPlainPassword () {
+        return $this->plainPassword;
     }
 
     public function setPasswordConfirmation ($passwordConfirmation) {
@@ -273,5 +261,14 @@ class AppUser {
     {
         return $this->updatedAt;
     }
-}
 
+    public function getRoles () {
+        return array('ROLE_USER');
+    }
+
+    public function getSalt () {
+        return null;
+    }
+
+    public function eraseCredentials () {}
+}

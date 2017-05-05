@@ -5,3 +5,6 @@ app:
 secure:
   path: /
   schemes: [https]
+
+logout:
+  path: /logout
