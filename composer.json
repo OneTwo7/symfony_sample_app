@@ -40,6 +40,11 @@
         "phpunit/phpunit": "5.7",
         "symfony/phpunit-bridge": "^3.0"
     },
+    "require-prod": {
+        "ext-mbstring": "*",
+        "ext-intl": "*",
+        "ext-apcu": "*"
+    },
     "scripts": {
         "symfony-scripts": [
             "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters",
