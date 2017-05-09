@@ -11,6 +11,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class UserController extends Controller {
 
@@ -67,7 +68,7 @@ class UserController extends Controller {
       $href = $this->get('router')->generate('account_activation', array(
         'activationToken' => $activationToken,
         'email' => $email
-      ));
+      ), UrlGeneratorInterface::ABSOLUTE_URL);
       $message = \Swift_Message::newInstance()
         ->setSubject('Sample App | Account Activation')
         ->setFrom('sample_app@example.com')
