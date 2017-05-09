@@ -12,11 +12,12 @@
       {% endif %}
       
       <form action="{{ path('login') }}" method="post">
-        <label for="email">Email:</label>
+        <label for="email">Email</label>
         <input type="text" id="email" name="_email"
                value="{{ last_email }}" class="form-control">
 
-        <label for="password">Password:</label>
+        <label for="password">Password</label>
+        <a href="{{ url('forgot_password') }}">(forgot password)</a>
         <input type="password" id="password" name="_password"
                class="form-control">
 

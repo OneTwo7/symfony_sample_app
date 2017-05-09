@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use AppBundle\Entity\ResetPassword;
 
 class UserController extends Controller {
 
@@ -64,7 +65,6 @@ class UserController extends Controller {
       $em->persist($user);
       $em->flush();
 
-      // Sending an activation email
       $href = $this->get('router')->generate('account_activation', array(
         'activationToken' => $activationToken,
         'email' => $email
@@ -141,6 +141,9 @@ class UserController extends Controller {
     }
 
     $form = $this->createFormBuilder($user)
+    ->add('old_password', PasswordType::class, array(
+      'attr' => array('class' => 'form-control'),
+      'label' => 'Old password'))
     ->add('plain_password', RepeatedType::class, array(
       'type' => PasswordType::class,
       'invalid_message' => 'The password fields must match.',
@@ -155,19 +158,26 @@ class UserController extends Controller {
     $form->handleRequest($request);
 
     if ($form->isSubmitted() && $form->isValid()) {
-      $plain_password = $form['plain_password']->getData();
 
-      $user->setPlainPassword($plain_password);
-      $user->setUpdatedAt(new \DateTime());
+      $oldPassword = $form['old_password']->getData();
 
-      $em = $this->getDoctrine()->getManager();
-      $em->flush();
+      if ($user->validateToken($oldPassword, 'password')) {
+        $plain_password = $form['plain_password']->getData();
 
-      $this->addFlash('notice', 'Your password has been changed.');
+        $user->setPlainPassword($plain_password);
+        $user->setUpdatedAt(new \DateTime());
 
-      $user_id = $user->getId();
+        $em = $this->getDoctrine()->getManager();
+        $em->flush();
 
-      return $this->redirectToRoute('user_show', array('id' => $user_id));
+        $this->addFlash('notice', 'Your password has been changed.');
+
+        $user_id = $user->getId();
+
+        return $this->redirectToRoute('user_show', array('id' => $user_id));
+      } else {
+        $this->addFlash('notice', 'Old password is incorrect.');
+      }
     }
 
     return $this->render('users/change_password.html.twig', [
@@ -199,6 +209,64 @@ class UserController extends Controller {
       $this->addFlash('notice', 'user deleted');
 
       return $this->redirectToRoute('user_index');
+  }
+
+  /**
+   * @Route("/forgot_password", name="forgot_password")
+   */
+  public function forgotPasswordAction (Request $request) {
+    $reset_password = new ResetPassword;
+
+    $form = $this->createFormBuilder($reset_password)
+    ->add('email', TextType::class,
+      array('attr' => array('class' => 'form-control')))
+    ->add('save', SubmitType::class, array('label' => 'Submit',
+    'attr' => array('class' => 'btn btn-primary')))->getForm();
+
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+      $email = $form['email']->getData();
+
+      $user = $this->getDoctrine()->getRepository('AppBundle:User')
+      ->findOneByEmail($email);
+
+      if (is_object($user)) {
+        $reset_token = $user->generateToken();
+
+        $user->encodeResetDigest($reset_token);
+        $user->setResetToken($reset_token);
+        $user->setResetSentAt(new \DateTime());
+
+        $em = $this->getDoctrine()->getManager();
+        $em->persist($user);
+        $em->flush();
+
+        $href = $this->get('router')->generate('reset_password', array(
+          'resetToken' => $resetToken,
+          'email' => $email
+        ), UrlGeneratorInterface::ABSOLUTE_URL);
+        $message = \Swift_Message::newInstance()
+          ->setSubject('Sample App | Reset Password')
+          ->setFrom('sample_app@example.com')
+          ->setTo("$email")
+          ->setBody($this->renderView('emails/reset_password.html.twig',
+              array('name' => $username, 'href' => $href)),
+              'text/html'
+        );
+        $this->get('mailer')->send($message);
+
+        $this->addFlash('notice', 'Check email for reset password link!');
+
+        return $this->redirectToRoute('home_page');
+      } else {
+        $this->addFlash('notice', 'There\'s no user with such email!');
+      }
+    }
+
+    return $this->render('users/forgot_password.html.twig', [
+      'form' => $form->createView()
+    ]);
   }
 
   private function makeForm ($user, $submit_text) {

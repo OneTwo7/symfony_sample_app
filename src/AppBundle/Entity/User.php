@@ -100,6 +100,8 @@ class User implements AdvancedUserInterface, \Serializable {
      */
     private $password;
 
+    private $oldPassword;
+
     /**
      * @ORM\Column(type="boolean", options={"default": false})
      */
@@ -116,6 +118,20 @@ class User implements AdvancedUserInterface, \Serializable {
      * @ORM\Column(type="string", length=64, nullable=true)
      */
     private $activationDigest;
+
+    private $resetToken;
+
+    /**
+     * @ORM\Column(type="string", length=64, nullable=true)
+     */
+    private $resetDigest;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="reset_sent_at", type="datetime", nullable=true)
+     */
+    private $resetSentAt;
 
     /**
      * @var \DateTime
@@ -234,6 +250,16 @@ class User implements AdvancedUserInterface, \Serializable {
         return $this->passwordConfirmation;
     }
 
+    public function setOldPassword ($oldPassword) {
+        $this->oldPassword = $oldPassword;
+
+        return $this;
+    }
+
+    public function getOldPassword () {
+        return $this->oldPassword;
+    }
+
     /**
      * Get admin
      *
@@ -307,6 +333,72 @@ class User implements AdvancedUserInterface, \Serializable {
      */
     public function getActivationDigest () {
         return $this->activationDigest;
+    }
+
+    /**
+     * Set resetToken
+     *
+     * @param string $resetToken
+     *
+     * @return User
+     */
+    public function setResetToken ($resetToken) {
+        $this->resetToken = $resetToken;
+
+        return $this;
+    }
+
+    /**
+     * Get resetToken
+     *
+     * @return string
+     */
+    public function getResetToken () {
+        return $this->resetToken;
+    }
+
+    /**
+     * Set resetDigest
+     *
+     * @param string $resetDigest
+     *
+     * @return User
+     */
+    public function setResetDigest ($resetDigest) {
+        $this->resetDigest = $resetDigest;
+
+        return $this;
+    }
+
+    /**
+     * Get resetDigest
+     *
+     * @return string
+     */
+    public function getResetDigest () {
+        return $this->resetDigest;
+    }
+
+    /**
+     * Set resetSentAt
+     *
+     * @param \DateTime $resetSentAt
+     *
+     * @return User
+     */
+    public function setResetSentAt ($resetSentAt) {
+        $this->resetSentAt = $resetSentAt;
+
+        return $this;
+    }
+
+    /**
+     * Get resetSentAt
+     *
+     * @return \DateTime
+     */
+    public function getResetSentAt () {
+        return $this->resetSentAt;
     }
 
     /**
@@ -414,12 +506,25 @@ class User implements AdvancedUserInterface, \Serializable {
         return implode("", $result);
     }
 
-    public function activate ($activationToken) {
+    public function validateToken ($raw, $type) {
         $encoder = new CustomEncoder;
-        $activationDigest = $this->getActivationDigest();
+        switch ($type) {
+            case 'activation':
+                $encoded = $this->getActivationDigest();
+                break;
+            case 'reset':
+                $encoded = $this->getResetDigest();
+                break;
+            default:
+                $encoded = $this->getPassword();
+        }
+        return $encoder->isPasswordValid($encoded, $raw, 'salt');
+    }
 
-        return
-        $encoder->isPasswordValid($activationDigest, $activationToken, 'salt');
+    public function encodeResetDigest ($resetToken) {
+        $encoder = new CustomEncoder;
+        $salt = random_bytes(22);
+        $this->setResetDigest($encoder->encodePassword($resetToken, $salt));
     }
 
 }
