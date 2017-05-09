@@ -17,6 +17,7 @@
       			<th>Created_at</th>
       			<th>Updated_at</th>
       			<th></th>
+            <th></th>
       		</tr>
       	</thead>
       	<tbody>
@@ -27,9 +28,14 @@
         			<td>{{ user.email }}</td>
         			<td>{{ user.createdAt | date('F j, Y, g:i a') }}</td>
         			<td>{{ user.updatedAt | date('F j, Y, g:i a') }}</td>
-        			<td><a href="/user/delete/{{ user.id }}" class="btn btn-danger">
-        				Delete
-        			</a></td>
+              {% if is_granted('ROLE_ADMIN') %}
+                <td><a href="/user/edit/{{ user.id }}" class="btn btn-warning">
+                  Edit
+                </a></td>
+          			<td><a href="/user/delete/{{ user.id }}" class="btn btn-danger">
+          				Delete
+          			</a></td>
+              {% endif %}
         		</tr>
       		{% else %}
       			empty

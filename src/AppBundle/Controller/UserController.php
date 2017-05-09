@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
@@ -42,17 +43,7 @@ class UserController extends Controller {
   public function createAction (Request $request) {
     $user = new User;
 
-    $form = $this->createFormBuilder($user)
-    ->add('username', TextType::class,
-      array('attr' => array('class' => 'form-control')))
-    ->add('email', TextType::class,
-      array('attr' => array('class' => 'form-control')))
-    ->add('plain_password', PasswordType::class,
-      array('attr' => array('class' => 'form-control')))
-    ->add('password_confirmation', PasswordType::class,
-      array('attr' => array('class' => 'form-control')))
-    ->add('save', SubmitType::class, array('label' => 'Create user',
-    'attr' => array('class' => 'btn btn-primary')))->getForm();
+    $form = $this->makeForm($user, 'Sign up');
 
     $form->handleRequest($request);
 
@@ -60,29 +51,125 @@ class UserController extends Controller {
       $username = $form['username']->getData();
       $email = $form['email']->getData();
       $plain_password = $form['plain_password']->getData();
-      $password_confirmation = $form['password_confirmation']->getData();
+
+      $activationToken = $user->generateToken();
 
       $user->setUsername($username);
       $user->setEmail($email);
       $user->setPlainPassword($plain_password);
-      $user->setPasswordConfirmation($password_confirmation);
+      $user->setActivationToken($activationToken);
 
       $em = $this->getDoctrine()->getManager();
       $em->persist($user);
       $em->flush();
 
-      $this->addFlash('notice', 'Welcome to the Sample App!');
+      // Sending an activation email
+      $href = $this->get('router')->generate('account_activation', array(
+        'activationToken' => $activationToken,
+        'email' => $email
+      ));
+      $message = \Swift_Message::newInstance()
+        ->setSubject('Sample App | Account Activation')
+        ->setFrom('sample_app@example.com')
+        ->setTo("$email")
+        ->setBody($this->renderView('emails/registration.html.twig',
+            array('name' => $username, 'href' => $href)),
+            'text/html'
+      );
+      $this->get('mailer')->send($message);
+
+      $this->addFlash('notice', 'Check email to activate your account!');
+
+      return $this->redirectToRoute('home_page');
+    }
+
+    return $this->render('users/new.html.twig', [
+      'form' => $form->createView()
+    ]);
+  }
+
+  /**
+   * @Route("user/edit/{id}", name="user_edit")
+   */
+  public function editAction (Request $request, $id) {
+    $user = $this->getDoctrine()->getRepository('AppBundle:User')->find($id);
+
+    if (is_null($user)) {
+      throw $this->createNotFoundException("User $id doesn't exist.");
+    }
+
+    $user->setUsername($user->getUsername());
+    $user->setEmail($user->getEmail());
+
+    $form = $this->makeForm($user, 'Update');
+
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+      $username = $form['username']->getData();
+      $email = $form['email']->getData();
+      $plain_password = $form['plain_password']->getData();
+
+      $user->setUsername($username);
+      $user->setEmail($email);
+      $user->setPlainPassword($plain_password);
+
+      $em = $this->getDoctrine()->getManager();
+      $em->flush();
+
+      $this->addFlash('notice', 'Your profile has been updated.');
 
       $user_id = $user->getId();
-
-      $token = new UsernamePasswordToken($user, null, 'main', $user->getRoles());
-      $this->get('security.token_storage')->setToken($token);
-      $this->get('session')->set('_security_main', serialize($token));
 
       return $this->redirectToRoute('user_show', array('id' => $user_id));
     }
 
-    return $this->render('users/new.html.twig', [
+    return $this->render('users/edit.html.twig', [
+      'form' => $form->createView()
+    ]);
+  }
+
+  /**
+   * @Route("user/change_password/{id}", name="user_change_password")
+   */
+  public function changePasswordAction (Request $request, $id) {
+    $user = $this->getDoctrine()->getRepository('AppBundle:User')->find($id);
+
+    if (is_null($user)) {
+      throw $this->createNotFoundException("User $id doesn't exist.");
+    }
+
+    $form = $this->createFormBuilder($user)
+    ->add('plain_password', RepeatedType::class, array(
+      'type' => PasswordType::class,
+      'invalid_message' => 'The password fields must match.',
+      'options' => array('attr' => array('class' => 'form-control')),
+      'required' => true,
+      'first_options' => array('label' => 'New password'),
+      'second_options' => array('label' => 'Password confirmation')
+    ))
+    ->add('save', SubmitType::class, array('label' => 'Change password',
+    'attr' => array('class' => 'btn btn-primary')))->getForm();
+
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+      $plain_password = $form['plain_password']->getData();
+
+      $user->setPlainPassword($plain_password);
+      $user->setUpdatedAt(new \DateTime());
+
+      $em = $this->getDoctrine()->getManager();
+      $em->flush();
+
+      $this->addFlash('notice', 'Your password has been changed.');
+
+      $user_id = $user->getId();
+
+      return $this->redirectToRoute('user_show', array('id' => $user_id));
+    }
+
+    return $this->render('users/change_password.html.twig', [
       'form' => $form->createView()
     ]);
   }
@@ -100,12 +187,37 @@ class UserController extends Controller {
           );
       }
 
+      if ($id == $this->getUser()->getId()) {
+        $this->addFlash('notice', 'You can\'t delete yourself!');
+        return $this->redirectToRoute('user_index');
+      }
+
       $em->remove($user);
       $em->flush();
 
       $this->addFlash('notice', 'user deleted');
 
       return $this->redirectToRoute('user_index');
+  }
+
+  private function makeForm ($user, $submit_text) {
+    $form = $this->createFormBuilder($user)
+    ->add('username', TextType::class,
+      array('attr' => array('class' => 'form-control')))
+    ->add('email', TextType::class,
+      array('attr' => array('class' => 'form-control')))
+    ->add('plain_password', RepeatedType::class, array(
+      'type' => PasswordType::class,
+      'invalid_message' => 'The password fields must match.',
+      'options' => array('attr' => array('class' => 'form-control')),
+      'required' => true,
+      'first_options' => array('label' => 'Password'),
+      'second_options' => array('label' => 'Password confirmation')
+    ))
+    ->add('save', SubmitType::class, array('label' => $submit_text,
+    'attr' => array('class' => 'btn btn-primary')))->getForm();
+
+    return $form;
   }
 
 }

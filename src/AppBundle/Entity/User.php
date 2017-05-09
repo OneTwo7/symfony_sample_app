@@ -4,7 +4,7 @@ namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\AdvancedUserInterface;
 use AppBundle\Encoder\CustomEncoder;
 
 /**
@@ -14,7 +14,7 @@ use AppBundle\Encoder\CustomEncoder;
  * @ORM\Entity(repositoryClass="AppBundle\Repository\UserRepository")
  * @ORM\HasLifecycleCallbacks
  */
-class User implements UserInterface, \Serializable {
+class User implements AdvancedUserInterface, \Serializable {
 
     /**
      *
@@ -33,12 +33,24 @@ class User implements UserInterface, \Serializable {
     /**
      *
      * @ORM\PrePersist
+     * @ORM\PreUpdate
      */
     public function encodePassword () {
         $encoder = new CustomEncoder;
         $raw = $this->getPlainPassword();
         $salt = random_bytes(22);
         $this->setPassword($encoder->encodePassword($raw, $salt));
+    }
+
+    /**
+     *
+     * @ORM\PrePersist
+     */
+    public function encodeActivationDigest () {
+        $encoder = new CustomEncoder;
+        $raw = $this->getActivationToken();
+        $salt = random_bytes(22);
+        $this->setActivationDigest($encoder->encodePassword($raw, $salt));
     }
     
     /**
@@ -84,18 +96,26 @@ class User implements UserInterface, \Serializable {
     private $plainPassword;
 
     /**
-     * @Assert\NotBlank()
-     * @Assert\Expression(
-     *      "this.getPlainPassword() === this.getPasswordConfirmation()",
-     *      message="Password confirmation doesn't match password!"
-     * )
-     */
-    private $passwordConfirmation;
-
-    /**
      * @ORM\Column(type="string", length=64)
      */
     private $password;
+
+    /**
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $admin = false;
+
+    /**
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $activated = false;
+
+    private $activationToken;
+
+    /**
+     * @ORM\Column(type="string", length=64, nullable=true)
+     */
+    private $activationDigest;
 
     /**
      * @var \DateTime
@@ -127,7 +147,7 @@ class User implements UserInterface, \Serializable {
      *
      * @param string $username
      *
-     * @return AppUser
+     * @return string
      */
     public function setUsername($username)
     {
@@ -151,7 +171,7 @@ class User implements UserInterface, \Serializable {
      *
      * @param string $email
      *
-     * @return AppUser
+     * @return User
      */
     public function setEmail($email)
     {
@@ -175,7 +195,7 @@ class User implements UserInterface, \Serializable {
      *
      * @param string $password
      *
-     * @return AppUser
+     * @return User
      */
     public function setPassword($password)
     {
@@ -215,11 +235,86 @@ class User implements UserInterface, \Serializable {
     }
 
     /**
+     * Get admin
+     *
+     * @return boolean
+     */
+    public function getAdmin () {
+        return $this->admin;
+    }
+
+    /**
+     * Set activated
+     *
+     * @param boolean $activated
+     *
+     * @return User
+     */
+    public function setActivated ($activated) {
+        $this->activated = $activated;
+
+        return $this;
+    }
+
+    /**
+     * Get activated
+     *
+     * @return boolean
+     */
+    public function getActivated () {
+        return $this->activated;
+    }
+
+    /**
+     * Set activationToken
+     *
+     * @param string $activationToken
+     *
+     * @return User
+     */
+    public function setActivationToken ($activationToken) {
+        $this->activationToken = $activationToken;
+
+        return $this;
+    }
+
+    /**
+     * Get activationToken
+     *
+     * @return string
+     */
+    public function getActivationToken () {
+        return $this->activationToken;
+    }
+
+    /**
+     * Set activationDigest
+     *
+     * @param string $activationDigest
+     *
+     * @return User
+     */
+    public function setActivationDigest ($activationDigest) {
+        $this->activationDigest = $activationDigest;
+
+        return $this;
+    }
+
+    /**
+     * Get activationDigest
+     *
+     * @return string
+     */
+    public function getActivationDigest () {
+        return $this->activationDigest;
+    }
+
+    /**
      * Set createdAt
      *
      * @param \DateTime $createdAt
      *
-     * @return AppUser
+     * @return User
      */
     public function setCreatedAt($createdAt)
     {
@@ -243,7 +338,7 @@ class User implements UserInterface, \Serializable {
      *
      * @param \DateTime $updatedAt
      *
-     * @return AppUser
+     * @return User
      */
     public function setUpdatedAt($updatedAt)
     {
@@ -263,7 +358,11 @@ class User implements UserInterface, \Serializable {
     }
 
     public function getRoles () {
-        return array('ROLE_USER');
+        if ($this->getAdmin()) {
+            return array('ROLE_ADMIN');
+        } else {
+            return array('ROLE_USER');
+        }
     }
 
     public function getSalt () {
@@ -271,6 +370,22 @@ class User implements UserInterface, \Serializable {
     }
 
     public function eraseCredentials () {}
+
+    public function isAccountNonExpired () {
+        return true;
+    }
+
+    public function isAccountNonLocked () {
+        return true;
+    }
+
+    public function isCredentialsNonExpired () {
+        return true;
+    }
+
+    public function isEnabled () {
+        return $this->getActivated();
+    }
 
     public function serialize () {
         return serialize(array(
@@ -285,4 +400,26 @@ class User implements UserInterface, \Serializable {
             $this->username
         ) = unserialize($serialized);
     }
+
+    // Custom methods
+
+    public function generateToken () {
+        $result = array();
+        $chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890-_";
+        $length = strlen($chars);
+        for ($i = 0; $i < 22; $i++) {
+            $result[] = $chars[rand(0, $length - 1)];
+        }
+        return implode("", $result);
+    }
+
+    public function activate ($activationToken) {
+        $encoder = new CustomEncoder;
+        $activationDigest = $this->getActivationDigest();
+
+        return
+        $encoder->isPasswordValid($activationDigest, $activationToken, 'salt');
+    }
+
 }

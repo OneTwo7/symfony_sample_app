@@ -6,6 +6,8 @@
 
 	  <h2>This is the home page for the Symfony sample application.</h2>
 
-	  <a href="/signup" class="btn btn-lg btn-primary">Sign up now!</a>
+	  {% if not is_granted('ROLE_USER') %}
+	  	<a href="/signup" class="btn btn-lg btn-primary">Sign up now!</a>
+	  {% endif %}
 	</div>
 {% endblock %}
