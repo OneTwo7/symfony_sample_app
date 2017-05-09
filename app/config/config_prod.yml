@@ -26,9 +26,9 @@ monolog:
             type: console
 
 swiftmailer:
-    transport: '%mailer_transport%'
-    host: '%mailer_host%'
-    port: '%mailer_port%'
-    encryption: '%mailer_encryption%'
+    transport: smtp
+    host: smtp.sendgrid.net
+    port: 587
+    encryption: tls
     username: "%env(SENDGRID_USERNAME)%"
     password: "%env(SENDGRID_PASSWORD)%"
