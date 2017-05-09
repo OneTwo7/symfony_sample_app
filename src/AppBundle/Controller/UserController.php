@@ -243,7 +243,7 @@ class UserController extends Controller {
         $em->flush();
 
         $href = $this->get('router')->generate('reset_password', array(
-          'resetToken' => $resetToken,
+          'resetToken' => $reset_token,
           'email' => $email
         ), UrlGeneratorInterface::ABSOLUTE_URL);
         $message = \Swift_Message::newInstance()
