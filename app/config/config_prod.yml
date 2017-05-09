@@ -25,7 +25,7 @@ monolog:
         console:
             type: console
 
-Swiftmailer:
+swiftmailer:
     transport: '%mailer_transport%'
     host: '%mailer_host%'
     port: '%mailer_port%'
