@@ -48,8 +48,10 @@ class AmazonS3Service {
       $picture->move($dir, $fileName);
       return 'uploads/pictures/'.$fileName;
     } else {
+      $fileName = $picture->getClientOriginalName();
+      $content = 'image/' . $picture->guessExtension();
       return $this->getClient()
-      ->upload($this->getBucket(), $fileName, $picture, 'public-read')
+      ->upload($this->getBucket(), $fileName, $content, 'public-read')
       ->toArray()['ObjectURL'];
     }
   }
