@@ -11,5 +11,16 @@
 	      </h1>
 	    </section>
 	  </aside>
+	  {% if count %}
+		  <div class="col-md-8">
+		  	<h3>Microposts ({{ count }})</h3>
+	      <ol class="microposts">
+		    {% for micropost in microposts %}
+		      {% include "./microposts/micropost.html.twig" %}
+		    {% endfor %}
+		    </ol>
+		    <p>Pagination</p>
+		  </div>
+		{% endif %}
 	</div>
 {% endblock %}

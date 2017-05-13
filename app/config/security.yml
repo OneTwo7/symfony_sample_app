@@ -46,6 +46,7 @@ security:
          - { path: ^/user/edit, roles: ROLE_USER }
          - { path: ^/user/change_password, roles: ROLE_USER }
          - { path: ^/user/delete, roles: ROLE_ADMIN }
+         - { path: ^/micropost/delete, roles: ROLE_USER }
 
     role_hierarchy:
         ROLE_ADMIN: [ROLE_USER]

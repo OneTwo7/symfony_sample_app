@@ -6,7 +6,6 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Entity\User;
-use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
@@ -34,8 +33,17 @@ class UserController extends Controller {
     $user = $this->getDoctrine()->getRepository('AppBundle:User')
     ->find($id);
 
+    if (is_null($user)) {
+      throw $this->createNotFoundException("User $id doesn't exist.");
+    }
+
+    $microposts = $user->getMicroposts();
+    $count = sizeof($microposts);
+
     return $this->render('users/show.html.twig', [
-        'user' => $user
+        'user' => $user,
+        'microposts' => $microposts,
+        'count' => $count
     ]);
   }
 

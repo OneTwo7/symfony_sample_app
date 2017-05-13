@@ -1,13 +1,38 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-	<div class="center jumbotron">
-	  <h1>Welcome to the Sample App</h1>
+	{% if not is_granted('ROLE_USER') %}
+		<div class="center jumbotron">
+		  <h1>Welcome to the Sample App</h1>
 
-	  <h2>This is the home page for the Symfony sample application.</h2>
+		  <h2>This is the home page for the Symfony sample application.</h2>
 
-	  {% if not is_granted('ROLE_USER') %}
 	  	<a href="/signup" class="btn btn-lg btn-primary">Sign up now!</a>
-	  {% endif %}
-	</div>
+		</div>
+	{% else %}
+		<div class="row">
+	    <aside class="col-md-4">
+	      <section class="user_info">
+	        {% include "./partials/user_info.html.twig" %}
+	      </section>
+	      <section class="micropost_form">
+	        {{ form_start(form) }}
+		      {{ form_widget(form) }}
+		      {{ form_end(form) }}
+	      </section>
+	    </aside>
+	    {% if microposts|length %}
+			  <div class="col-md-8">
+			  	<h3>Micropost Feed</h3>
+		      <ol class="microposts">
+			    {% for micropost in microposts %}
+			      {% include "./microposts/micropost.html.twig" %}
+			    {% endfor %}
+			    </ol>
+			    <p>Pagination</p>
+			  </div>
+			{% endif %}
+	  </div>
+	{% endif %}
+
 {% endblock %}

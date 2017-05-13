@@ -6,9 +6,10 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\AdvancedUserInterface;
 use AppBundle\Encoder\CustomEncoder;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * AppUser
+ * User
  *
  * @ORM\Table(name="users", indexes={@ORM\Index(name="email_idx", columns={"email"})})
  * @ORM\Entity(repositoryClass="AppBundle\Repository\UserRepository")
@@ -61,6 +62,13 @@ class User implements AdvancedUserInterface, \Serializable {
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     private $id;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Micropost", mappedBy="user",
+     cascade={"remove", "persist", "refresh", "merge", "detach"})
+     * @ORM\OrderBy({"createdAt"="desc"})
+     */
+    private $microposts;
 
     /**
      * @var string
@@ -156,6 +164,16 @@ class User implements AdvancedUserInterface, \Serializable {
     public function getId()
     {
         return $this->id;
+    }
+
+    public function setMicroposts (ArrayCollection $microposts) {
+        $this->microposts = $microposts;
+
+        return $this;
+    }
+
+    public function getMicroposts () {
+        return $this->microposts;
     }
 
     /**

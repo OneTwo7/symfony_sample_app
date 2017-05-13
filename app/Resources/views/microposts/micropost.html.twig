@@ -1,0 +1,19 @@
+<li id="micropost-{{ micropost.id }}">
+  <span>Gravatar</span>
+  <span class="user">
+  	<a href="/user/{{ micropost.user.id }}">{{ micropost.user.username }}</a>
+  </span>
+  <span class="content">
+    {{ micropost.content }}
+    {% if micropost.picture %}
+      <img src="{{ asset('uploads/pictures/' ~ micropost.picture) }}"
+           alt="Micropost {{ micropost.id }} picture">
+    {% endif %}
+  </span>
+  <span class="timestamp">
+    Posted {{ micropost.createdAt | date('F j, Y, g:i a') }}.
+    {% if micropost.user.id == user.id %}
+    	<a href="/micropost/delete/{{ micropost.id }}">delete</a>
+    {% endif %}
+  </span>
+</li>
