@@ -50,7 +50,12 @@ class AmazonS3Service {
     } else {
       $s3 = $this->getClient();
       $bucket = $this->getBucket();
-      $upload = $s3->upload($bucket, $fileName, $picture, 'public-read');
+      $strm = fopen($picture, 'rb');
+      try {
+        $upload = $s3->upload($bucket, $fileName, $strm, 'public-read');
+      } catch (Aws\S3\Exception\S3Exception $e) {
+        return "The error is $e";
+      }
       return $upload->get('ObjectURL');
     }
   }
