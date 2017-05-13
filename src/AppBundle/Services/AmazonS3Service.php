@@ -61,10 +61,11 @@ class AmazonS3Service {
       $picture->move($dir, $fileName);
       return $fileName;
     } else {
+      $originalName = $picture->getClientOriginalName();
       $mimeTypeHandler = finfo_open(FILEINFO_MIME_TYPE);
-      $meta['contentType'] = finfo_file($mimeTypeHandler, $fileName);
+      $meta['contentType'] = finfo_file($mimeTypeHandler, $originalName);
       finfo_close($mimeTypeHandler);
-      return $this->upload($fileName, file_get_contents($fileName), $meta);
+      return $this->upload($fileName, file_get_contents($originalName), $meta);
     }
   }
 

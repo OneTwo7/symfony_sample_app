@@ -18,8 +18,9 @@ services:
     arguments:
       - "%kernel.environment%"
       - "%env(S3_BUCKET)%"
-      - credentials:
-        key:     "%env(S3_ACCESS_KEY)%"
-        secret:  "%env(S3_SECRET_KEY)%"
-        region:  "%env(S3_REGION)%"
+      - s3arguments:
         version: "2006-03-01"
+        region:  "%env(S3_REGION)%"
+        credentials:
+          key:     "%env(S3_ACCESS_KEY)%"
+          secret:  "%env(S3_SECRET_KEY)%"
