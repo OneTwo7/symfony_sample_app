@@ -38,19 +38,6 @@ class AmazonS3Service {
   }
 
   /**
-   * @param  string $fileName
-   * @param  string $content
-   * @param  array  $meta
-   * @return string file url
-   */
-  public function upload ($fileName, $content, $meta) {
-    return $this->getClient()
-    ->upload($this->getBucket(), $fileName, $content, 'public-read', [
-      'Metadata' => $meta
-    ])->toArray()['ObjectURL'];
-  }
-
-  /**
    * @param  object $picture
    * @param  string $fileName
    * @param  string $dir
@@ -59,13 +46,11 @@ class AmazonS3Service {
   public function uploadImage ($picture, $fileName, $dir) {
     if ($this->env == "dev") {
       $picture->move($dir, $fileName);
-      return $fileName;
+      return 'uploads/pictures/'.$fileName;
     } else {
-      $originalName = $picture->getClientOriginalName();
-      $mimeTypeHandler = finfo_open(FILEINFO_MIME_TYPE);
-      $meta['contentType'] = finfo_file($mimeTypeHandler, $originalName);
-      finfo_close($mimeTypeHandler);
-      return $this->upload($fileName, file_get_contents($originalName), $meta);
+      return $this->getClient()
+      ->upload($this->getBucket(), $fileName, $picture, 'public-read')
+      ->toArray()['ObjectURL'];
     }
   }
 

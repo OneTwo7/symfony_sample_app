@@ -6,7 +6,7 @@
   <span class="content">
     {{ micropost.content }}
     {% if micropost.picture %}
-      <img src="{{ asset('uploads/pictures/' ~ micropost.picture) }}"
+      <img src="{{ asset(micropost.picture) }}"
            alt="Micropost {{ micropost.id }} picture">
     {% endif %}
   </span>
