@@ -48,7 +48,7 @@ class AmazonS3Service {
       $picture->move($dir, $fileName);
       return 'uploads/pictures/'.$fileName;
     } else {
-      $s3 = S3Client::factory();
+      $s3 = $this->getClient();
       $bucket = $this->getBucket();
       $upload = $s3->upload($bucket, $fileName, $picture, 'public-read');
       return $upload->get('ObjectURL');
