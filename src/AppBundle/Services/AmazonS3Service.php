@@ -52,7 +52,8 @@ class AmazonS3Service {
       $bucket = $this->getBucket();
       $strm = fopen($picture, 'rb');
       try {
-        $upload = $s3->upload($bucket, $fileName, $strm, 'public-read');
+        $upload = $s3
+        ->upload($bucket, '/symfony/' . $fileName, $strm, 'public-read');
       } catch (Aws\S3\Exception\S3Exception $e) {
         return "The error is $e";
       }
