@@ -40,25 +40,19 @@ class AmazonS3Service {
   /**
    * @param  object $picture
    * @param  string $fileName
-   * @param  string $dir
    * @return string file url
    */
-  public function uploadImage ($picture, $fileName, $dir) {
-    if ($this->env == "dev") {
-      $picture->move($dir, $fileName);
-      return 'uploads/pictures/'.$fileName;
-    } else {
-      $s3 = $this->getClient();
-      $bucket = $this->getBucket();
-      $strm = fopen($picture, 'rb');
-      try {
-        $upload = $s3
-        ->upload($bucket, 'symfony/' . $fileName, $strm, 'public-read');
-      } catch (Aws\S3\Exception\S3Exception $e) {
-        return "The error is $e";
-      }
-      return $upload->get('ObjectURL');
+  public function uploadImage ($picture, $fileName) {
+    $s3 = $this->getClient();
+    $bucket = $this->getBucket();
+    $strm = fopen($picture, 'rb');
+    try {
+      $upload = $s3
+      ->upload($bucket, 'symfony/' . $fileName, $strm, 'public-read');
+    } catch (Aws\S3\Exception\S3Exception $e) {
+      return "The error is $e";
     }
+    return $upload->get('ObjectURL');
   }
 
   /**

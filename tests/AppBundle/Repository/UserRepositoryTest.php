@@ -5,7 +5,7 @@ namespace Tests\AppBundle\Repository;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
-class AppUserRepositoryTest extends KernelTestCase {
+class UserRepositoryTest extends KernelTestCase {
 
     /**
      * @var \Doctrine\ORM\EntityManager
@@ -25,8 +25,8 @@ class AppUserRepositoryTest extends KernelTestCase {
 
     public function testDoctrine () {
         $users = $this->em
-            ->getRepository('AppBundle:AppUser')
-            ->findByName('Greg')
+            ->getRepository('AppBundle:User')
+            ->findByUsername('Greg')
         ;
 
         $this->assertTrue(true);

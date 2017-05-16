@@ -4,16 +4,16 @@ namespace Tests\AppBundle\Entity;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Validator\Validation;
-use AppBundle\Entity\AppUser;
+use AppBundle\Entity\User;
 
-class AppUserTest extends WebTestCase {
+class UserTest extends WebTestCase {
 
 	public function testUserValidity () {
 		$validator = Validation::createValidator();
 
-		$user = new AppUser;
+		$user = new User();
 
-		$user->setName("");
+		$user->setUsername("");
 		$user->setEmail("");
 
 		$violations = $validator->validate($user);

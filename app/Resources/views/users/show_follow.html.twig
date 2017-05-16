@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ title }} | {% endblock %}
+
+{% block body %}
+  <div class="row">
+    <aside class="col-md-4">
+      <section class="user_info">
+        <img src="{{ user.gravatar() }}" alt="{{ user.username }}"
+             class="gravatar">
+        <h1>{{ user.username }}</h1>
+        <span><a href="/user/{{ user.id }}">View my profile</a></span>
+        <span><b>Microposts:</b> {{ user.microposts|length }}</span>
+      </section>
+      <section class="stats">
+        {% include './partials/stats.html.twig' %}
+        {% if users|length %}
+          <div class="user_avatars">
+            {% for user in gravatars %}
+              <a href="/user/{{ user.id }}">
+                <img src="{{ user.gravatar(30) }}" alt="{{ user.username }}"
+                     class="gravatar">
+              </a>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </section>
+    </aside>
+    <div class="col-md-8">
+      <h3>{{ title }}</h3>
+      {% if users|length %}
+        <ul class="users follow">
+          {% for user in users %}
+            {% include './users/_user.html.twig' %}
+          {% endfor %}
+        </ul>
+        {{ knp_pagination_render(users) }}
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

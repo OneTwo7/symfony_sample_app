@@ -1,5 +1,6 @@
 <li id="micropost-{{ micropost.id }}">
-  <span>Gravatar</span>
+  <img src="{{ micropost.user.gravatar(50) }}"
+       alt="{{ micropost.user.username }}" class="gravatar">
   <span class="user">
   	<a href="/user/{{ micropost.user.id }}">{{ micropost.user.username }}</a>
   </span>
@@ -12,7 +13,7 @@
   </span>
   <span class="timestamp">
     Posted {{ micropost.createdAt | date('F j, Y, g:i a') }}.
-    {% if micropost.user.id == user.id %}
+    {% if is_granted('ROLE_ADMIN') or micropost.user.id == user.id %}
     	<a href="/micropost/delete/{{ micropost.id }}">delete</a>
     {% endif %}
   </span>

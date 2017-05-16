@@ -37,10 +37,10 @@ class User implements AdvancedUserInterface, \Serializable {
      * @ORM\PreUpdate
      */
     public function encodePassword () {
-        $encoder = new CustomEncoder;
+        $encoder = new CustomEncoder();
         $raw = $this->getPlainPassword();
-        $salt = random_bytes(22);
-        $this->setPassword($encoder->encodePassword($raw, $salt));
+        $encoded = $encoder->encodePassword($raw, null);
+        $this->setPassword($encoded);
     }
 
     /**
@@ -50,8 +50,7 @@ class User implements AdvancedUserInterface, \Serializable {
     public function encodeActivationDigest () {
         $encoder = new CustomEncoder;
         $raw = $this->getActivationToken();
-        $salt = random_bytes(22);
-        $this->setActivationDigest($encoder->encodePassword($raw, $salt));
+        $this->setActivationDigest($encoder->encodePassword($raw, null));
     }
     
     /**
@@ -69,6 +68,18 @@ class User implements AdvancedUserInterface, \Serializable {
      * @ORM\OrderBy({"createdAt"="desc"})
      */
     private $microposts;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Relationship", mappedBy="follower",
+     cascade={"remove", "persist", "refresh", "merge", "detach"})
+     */
+    private $active_relationships;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Relationship", mappedBy="followed",
+     cascade={"remove", "persist", "refresh", "merge", "detach"})
+     */
+    private $passive_relationships;
 
     /**
      * @var string
@@ -176,6 +187,26 @@ class User implements AdvancedUserInterface, \Serializable {
         return $this->microposts;
     }
 
+    public function setActiveRelationships (ArrayCollection $active_relationships) {
+        $this->active_relationships = $active_relationships;
+
+        return $this;
+    }
+
+    public function getActiveRelationships () {
+        return $this->active_relationships;
+    }
+
+    public function setPassiveRelationships (ArrayCollection $passive_relationships) {
+        $this->passive_relationships = $passive_relationships;
+
+        return $this;
+    }
+
+    public function getPassiveRelationships () {
+        return $this->passive_relationships;
+    }
+
     /**
      * Set username
      *
@@ -276,6 +307,19 @@ class User implements AdvancedUserInterface, \Serializable {
 
     public function getOldPassword () {
         return $this->oldPassword;
+    }
+
+    /**
+     * Set admin
+     *
+     * @param boolean $admin
+     *
+     * @return User
+     */
+    public function setAdmin ($admin) {
+        $this->admin = $admin;
+
+        return $this;
     }
 
     /**
@@ -536,13 +580,28 @@ class User implements AdvancedUserInterface, \Serializable {
             default:
                 $encoded = $this->getPassword();
         }
-        return $encoder->isPasswordValid($encoded, $raw, 'salt');
+        return $encoder->isPasswordValid($encoded, $raw, null);
     }
 
     public function encodeResetDigest ($resetToken) {
         $encoder = new CustomEncoder;
-        $salt = random_bytes(22);
-        $this->setResetDigest($encoder->encodePassword($resetToken, $salt));
+        $this->setResetDigest($encoder->encodePassword($resetToken, null));
+    }
+
+    public function gravatar ($size = 80) {
+        $email = $this->getEmail();
+        return "https://www.gravatar.com/avatar/" . 
+                md5(strtolower(trim($email))) . "?s=" . $size;
+    }
+
+    public function isFollowing ($user) {
+        $rels = $this->getActiveRelationships();
+        foreach ($rels as $rel) {
+            if ($rel->getFollowed() == $user) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

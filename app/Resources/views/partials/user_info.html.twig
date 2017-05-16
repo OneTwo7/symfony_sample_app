@@ -1,4 +1,10 @@
-<span>Gravatar</span>
+<img src="{{ user.gravatar() }}" alt="{{ user.username }}"
+     class="gravatar">
 <h1>{{ user.username }}</h1>
 <span><a href="user/{{ user.id }}">view my profile</a></span>
-<span>Micropost count</span>
+{% set count = user.microposts|length %}
+<span>
+	{% transchoice count %}
+    {0} 0 microposts|{1} 1 micropost|]1,Inf[ %count% microposts
+	{% endtranschoice %}
+</span>

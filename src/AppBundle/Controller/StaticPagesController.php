@@ -22,16 +22,26 @@ class StaticPagesController extends Controller {
       return $this->render('static_pages/home.html.twig');
     }
 
-    // PROTOFEED
+    // FEED
     $em = $this->getDoctrine()->getManager();
-    $query = $em->createQuery(
-      'SELECT m
-      FROM AppBundle:Micropost m
-      WHERE m.user = :id
-      ORDER BY m.createdAt DESC'
-    )->setParameter('id', $user->getId());
+    $user_id = $user->getId();
+    $following_ids = "SELECT IDENTITY(r.followed) FROM AppBundle:Relationship r
+                      WHERE r.follower = $user_id";
 
-    $microposts = $query->getResult();
+    $query = $em->createQuery(
+      "SELECT m
+      FROM AppBundle:Micropost m
+      WHERE m.user IN ($following_ids) OR m.user = :id
+      ORDER BY m.createdAt DESC"
+    )->setParameter('id', $user_id);
+
+    $paginator = $this->get('knp_paginator');
+
+    $microposts = $paginator->paginate(
+      $query,
+      $request->query->getInt('page', 1),
+      10
+    );
 
     $micropost = new Micropost();
 
@@ -57,12 +67,19 @@ class StaticPagesController extends Controller {
 
       if (!is_null($picture)) {
         $pictureName = md5(uniqid()).'.'.$picture->guessExtension();
-        $pictureDirectory = $this->getParameter('pictures_directory');
 
-        $s3 = $this->container->get('amazon_storage');
-        $pic = $s3->uploadImage($picture, $pictureName, $pictureDirectory);
+        if ($this->container->get('kernel')->getEnvironment() == "dev") {
+          $picture->move(
+            $this->getParameter('pictures_directory'),
+            $pictureName
+          );
+          $pictureName = 'uploads/pictures/' . $pictureName;
+        } else {
+          $s3 = $this->container->get('amazon_storage');
+          $pictureName = $s3->uploadImage($picture, $pictureName);
+        } 
 
-        $micropost->setPicture($pic);
+        $micropost->setPicture($pictureName);
       }
 
       $micropost->setContent($content);

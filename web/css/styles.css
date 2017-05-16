@@ -6827,6 +6827,15 @@ footer {
       float: left;
       margin-left: 15px; }
 
+/* Users index */
+.users {
+  list-style: none;
+  margin: 0; }
+  .users li {
+    overflow: auto;
+    padding: 10px 0;
+    border-bottom: 1px solid #999; }
+
 /* sidebar */
 aside section.user_info {
   margin-top: 20px; }
@@ -6847,6 +6856,42 @@ aside section {
     letter-spacing: -1px;
     margin-bottom: 3px;
     margin-top: 0px; }
+
+.gravatar {
+  float: left;
+  margin-right: 10px; }
+
+.gravatar_edit {
+  margin-top: 15px; }
+
+.stats {
+  overflow: auto;
+  margin-top: 0;
+  padding: 0; }
+  .stats a {
+    float: left;
+    padding: 0 10px;
+    border-left: 1px solid #999;
+    color: gray; }
+    .stats a:first-child {
+      padding-left: 0;
+      border: 0; }
+    .stats a:hover {
+      text-decoration: none;
+      color: blue; }
+  .stats strong {
+    display: block; }
+
+.user_avatars {
+  overflow: auto;
+  margin-top: 10px; }
+  .user_avatars .gravatar {
+    margin: 1px 1px; }
+  .user_avatars a {
+    padding: 0; }
+
+.users.follow {
+  padding: 0; }
 
 /* forms */
 input, textarea, select, .uneditable-input {

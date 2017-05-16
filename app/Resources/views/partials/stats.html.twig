@@ -1,0 +1,14 @@
+<div class="stats">
+  <a href="/user/{{ user.id }}/following">
+    <strong id="following" class="stat">
+      {{ user.activeRelationships|length }}
+    </strong>
+    following
+  </a>
+  <a href="/user/{{ user.id }}/followers">
+    <strong id="followers" class="stat">
+      {{ user.passiveRelationships|length }}
+    </strong>
+    followers
+  </a>
+</div>

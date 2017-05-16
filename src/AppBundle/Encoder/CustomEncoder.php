@@ -13,8 +13,7 @@ class CustomEncoder extends BasePasswordEncoder {
     }
 
     $options = array(
-      'cost' => 12,
-      'salt' => $salt
+      'cost' => 12
     );
 
     return password_hash($raw, PASSWORD_BCRYPT, $options);

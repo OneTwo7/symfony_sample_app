@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use AppBundle\Entity\ResetPassword;
+use AppBundle\Entity\Relationship;
 
 class UserController extends Controller {
 
@@ -19,17 +20,18 @@ class UserController extends Controller {
    * @Route("/users", name="user_index")
    */
   public function indexAction (Request $request) {
-    $users = $this->getDoctrine()->getRepository('AppBundle:User')
-    ->findAll();
+    $dql   = "SELECT u FROM AppBundle:User u ORDER BY u.id";
+    $users = $this->paginate($request, $dql);
+
     return $this->render('users/index.html.twig', [
         'users' => $users,
     ]);
   }
 
   /**
-   * @Route("/user/{id}", name="user_show")
+   * @Route("/user/{id}/following", name="user_following")
    */
-  public function showAction ($id) {
+  public function followingAction (Request $request, $id) {
     $user = $this->getDoctrine()->getRepository('AppBundle:User')
     ->find($id);
 
@@ -37,14 +39,149 @@ class UserController extends Controller {
       throw $this->createNotFoundException("User $id doesn't exist.");
     }
 
+    $following_ids = "SELECT IDENTITY(r.followed)
+    FROM AppBundle:Relationship r WHERE r.follower = $id";
+
+    $dql = "SELECT u FROM AppBundle:User u
+    WHERE u.id IN ($following_ids) ORDER BY u.createdAt";
+
+    $following = $this->paginate($request, $dql);
+
+    $em = $this->getDoctrine()->getManager();
+    $users = $em->createQuery($dql)->getResult();
+
+    return $this->render('users/show_follow.html.twig', [
+      'title'     => 'Following',
+      'user'      => $user,
+      'gravatars' => $users,
+      'users'     => $following
+    ]);
+  }
+
+  /**
+   * @Route("/user/{id}/followers", name="user_followers")
+   */
+  public function followersAction (Request $request, $id) {
+    $user = $this->getDoctrine()->getRepository('AppBundle:User')
+    ->find($id);
+
+    if (is_null($user)) {
+      throw $this->createNotFoundException("User $id doesn't exist.");
+    }
+
+    $followers_ids = "SELECT IDENTITY(r.follower)
+    FROM AppBundle:Relationship r WHERE r.followed = $id";
+    
+    $dql = "SELECT u FROM AppBundle:User u
+    WHERE u.id IN ($followers_ids) ORDER BY u.createdAt";
+
+    $followers = $this->paginate($request, $dql);
+
+    $em = $this->getDoctrine()->getManager();
+    $users = $em->createQuery($dql)->getResult();
+
+    return $this->render('users/show_follow.html.twig', [
+      'title'     => 'Followers',
+      'user'      => $user,
+      'gravatars' => $users,
+      'users'     => $followers
+    ]);
+  }
+
+  /**
+   * @Route("/user/{id}", name="user_show")
+   */
+  public function showAction (Request $request, $id) {
+    $user = $this->getDoctrine()->getRepository('AppBundle:User')
+    ->find($id);
+
+    if (is_null($user)) {
+      throw $this->createNotFoundException("User $id doesn't exist.");
+    }
+
+    $relationship = new Relationship();
     $microposts = $user->getMicroposts();
     $count = sizeof($microposts);
+
+    $form = $this->createFormBuilder($relationship)
+    ->setAction($this->generateUrl('user_show', array('id' => $id)))
+    ->add('save', SubmitType::class, array('label' => 'Follow',
+    'attr' => array('class' => 'btn btn-block btn-primary')))->getForm();
+
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+      $current_user = $this->get('security.token_storage')->getToken()
+      ->getUser();
+
+      $relationship->setFollower($current_user);
+      $relationship->setFollowed($user);
+
+      $em = $this->getDoctrine()->getManager();
+      $em->persist($relationship);
+      $em->flush();
+
+      return $this->render('users/show.html.twig', array(
+        'user' => $user,
+        'microposts' => $microposts,
+        'count' => $count,
+        'form' => $form->createView()
+      ));
+    }
 
     return $this->render('users/show.html.twig', [
         'user' => $user,
         'microposts' => $microposts,
-        'count' => $count
+        'count' => $count,
+        'form' => $form->createView()
     ]);
+  }
+
+  /**
+   * @Route("/user/unfollow/{id}", name="user_unfollow")
+   */
+  public function unfollowAction ($id) {
+    $em = $this->getDoctrine()->getManager();
+    $user = $em->getRepository('AppBundle:User')->find($id);
+
+    if (is_null($user)) {
+      throw $this->createNotFoundException(
+        "user $id does not exist"
+      );
+    }
+
+    $current_user = $this->get('security.token_storage')->getToken()
+    ->getUser();
+
+    $query = $em->createQuery(
+      'SELECT r
+      FROM AppBundle:Relationship r
+      WHERE r.follower = :current_user_id AND
+      r.followed = :user_id'
+    )->setParameters(array(
+      'current_user_id' => $current_user->getId(),
+      'user_id' => $id
+    ));
+
+    $relationship = $query->getResult()[0];
+
+    $em->remove($relationship);
+    $em->flush();
+
+    $microposts = $user->getMicroposts();
+    $count = sizeof($microposts);
+
+    $form = $this->createFormBuilder($relationship)
+    ->setAction($this->generateUrl('user_show', array('id' => $id)))
+    ->add('save', SubmitType::class, array('label' => 'Follow',
+    'attr' => array('class' => 'btn btn-block btn-primary')))->getForm();
+
+    return $this->render('users/show.html.twig', array(
+      'user' => $user,
+      'microposts' => $microposts,
+      'count' => $count,
+      'form' => $form->createView()
+    ));
   }
 
   /**
@@ -295,6 +432,19 @@ class UserController extends Controller {
     'attr' => array('class' => 'btn btn-primary')))->getForm();
 
     return $form;
+  }
+
+  private function paginate ($request, $dql) {
+    $em    = $this->getDoctrine()->getManager();
+    $query = $em->createQuery($dql);
+
+    $paginator = $this->get('knp_paginator');
+
+    return $paginator->paginate(
+      $query,
+      $request->query->getInt('page', 1),
+      10
+    );
   }
 
 }
