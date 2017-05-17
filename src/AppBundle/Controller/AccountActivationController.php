@@ -56,7 +56,7 @@ class AccountActivationController extends Controller {
     $resetDigest = $user->getResetDigest();
 
     if ($user->getResetSentAt() < 7200 &&
-        password_verify($resetToken, $resetDigest) {
+        password_verify($resetToken, $resetDigest)) {
     	$form = $this->createFormBuilder($user)
 	    ->add('plain_password', RepeatedType::class, array(
 	      'type' => PasswordType::class,
