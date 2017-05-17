@@ -7,9 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use AppBundle\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
-use Symfony\Component\Form\Extension\Core\Type\PasswordType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use AppBundle\Form\ResetPasswordType;
 
 class AccountActivationController extends Controller {
 
@@ -59,17 +57,7 @@ class AccountActivationController extends Controller {
 
     if ($user->getResetSentAt() < 7200 &&
         password_verify($resetToken, $resetDigest)) {
-    	$form = $this->createFormBuilder($user)
-	    ->add('plain_password', RepeatedType::class, array(
-	      'type' => PasswordType::class,
-	      'invalid_message' => 'The password fields must match.',
-	      'options' => array('attr' => array('class' => 'form-control')),
-	      'required' => true,
-	      'first_options' => array('label' => 'New password'),
-	      'second_options' => array('label' => 'Password confirmation')
-	    ))
-	    ->add('save', SubmitType::class, array('label' => 'Reset password',
-	    'attr' => array('class' => 'btn btn-primary')))->getForm();
+    	$form = $this->createForm(ResetPasswordType::class, $user);
 
 	    $form->handleRequest($request);
 

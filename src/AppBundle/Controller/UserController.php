@@ -6,13 +6,14 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Entity\User;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
-use Symfony\Component\Form\Extension\Core\Type\PasswordType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use AppBundle\Entity\ResetPassword;
 use AppBundle\Entity\Relationship;
+use AppBundle\Form\FollowType;
+use AppBundle\Form\UserType;
+use AppBundle\Form\EditType;
+use AppBundle\Form\ChangePasswordType;
+use AppBundle\Form\ForgotPasswordType;
 
 class UserController extends Controller {
 
@@ -35,12 +36,7 @@ class UserController extends Controller {
    * @Route("/user/{id}/following", name="user_following")
    */
   public function followingAction (Request $request, $id) {
-    $user = $this->getDoctrine()->getRepository('AppBundle:User')
-    ->find($id);
-
-    if (is_null($user)) {
-      throw $this->createNotFoundException("User $id doesn't exist.");
-    }
+    $user = $this->findUser($id);
 
     $em = $this->getDoctrine()->getManager();
 
@@ -69,12 +65,7 @@ class UserController extends Controller {
    * @Route("/user/{id}/followers", name="user_followers")
    */
   public function followersAction (Request $request, $id) {
-    $user = $this->getDoctrine()->getRepository('AppBundle:User')
-    ->find($id);
-
-    if (is_null($user)) {
-      throw $this->createNotFoundException("User $id doesn't exist.");
-    }
+    $user = $this->findUser($id);
 
     $em = $this->getDoctrine()->getManager();
 
@@ -103,22 +94,15 @@ class UserController extends Controller {
    * @Route("/user/{id}", name="user_show")
    */
   public function showAction (Request $request, $id) {
-
-    $user = $this->getDoctrine()->getRepository('AppBundle:User')
-    ->find($id);
-
-    if (is_null($user)) {
-      throw $this->createNotFoundException("User $id doesn't exist.");
-    }
+    $user = $this->findUser($id);
 
     $relationship = new Relationship();
     $microposts = $user->getMicroposts();
     $count = sizeof($microposts);
 
-    $form = $this->createFormBuilder($relationship)
-    ->setAction($this->generateUrl('user_show', array('id' => $id)))
-    ->add('save', SubmitType::class, array('label' => 'Follow',
-    'attr' => array('class' => 'btn btn-block btn-primary')))->getForm();
+    $form = $this->createForm(FollowType::class, $relationship, array(
+      'action' => $this->generateUrl('user_show', array('id' => $id))
+    ));
 
     $form->handleRequest($request);
 
@@ -153,17 +137,12 @@ class UserController extends Controller {
    * @Route("/user/unfollow/{id}", name="user_unfollow")
    */
   public function unfollowAction ($id) {
-    $em = $this->getDoctrine()->getManager();
-    $user = $em->getRepository('AppBundle:User')->find($id);
-
-    if (is_null($user)) {
-      throw $this->createNotFoundException(
-        "user $id does not exist"
-      );
-    }
+    $user = $this->findUser($id);
 
     $current_user = $this->get('security.token_storage')->getToken()
     ->getUser();
+
+    $em = $this->getDoctrine()->getManager();
 
     $query = $em->createQuery(
       'SELECT r
@@ -202,7 +181,7 @@ class UserController extends Controller {
   public function createAction (Request $request) {
     $user = new User;
 
-    $form = $this->makeForm($user, 'Sign up');
+    $form = $this->createForm(UserType::class, $user);
 
     $form->handleRequest($request);
 
@@ -253,26 +232,12 @@ class UserController extends Controller {
    * @Route("user/edit/{id}", name="user_edit")
    */
   public function editAction (Request $request, $id) {
-    $user = $this->getDoctrine()->getRepository('AppBundle:User')->find($id);
-
-    if (is_null($user)) {
-      throw $this->createNotFoundException("User $id doesn't exist.");
-    }
+    $user = $this->findUser($id);
 
     $user->setUsername($user->getUsername());
     $user->setEmail($user->getEmail());
 
-    $form = $this->createFormBuilder($user)
-    ->add('username', TextType::class,
-      array('attr' => array('class' => 'form-control')))
-    ->add('email', TextType::class,
-      array('attr' => array('class' => 'form-control')))
-    ->add('plain_password', PasswordType::class, array(
-      'label' => 'password',
-      'attr' => array('class' => 'form-control')
-    ))
-    ->add('save', SubmitType::class, array('label' => 'Update',
-    'attr' => array('class' => 'btn btn-primary')))->getForm();
+    $form = $this->createForm(EditType::class, $user);
 
     $form->handleRequest($request);
 
@@ -309,26 +274,9 @@ class UserController extends Controller {
    * @Route("user/change_password/{id}", name="user_change_password")
    */
   public function changePasswordAction (Request $request, $id) {
-    $user = $this->getDoctrine()->getRepository('AppBundle:User')->find($id);
+    $user = $this->findUser($id);
 
-    if (is_null($user)) {
-      throw $this->createNotFoundException("User $id doesn't exist.");
-    }
-
-    $form = $this->createFormBuilder($user)
-    ->add('old_password', PasswordType::class, array(
-      'attr' => array('class' => 'form-control'),
-      'label' => 'Old password'))
-    ->add('plain_password', RepeatedType::class, array(
-      'type' => PasswordType::class,
-      'invalid_message' => 'The password fields must match.',
-      'options' => array('attr' => array('class' => 'form-control')),
-      'required' => true,
-      'first_options' => array('label' => 'New password'),
-      'second_options' => array('label' => 'Password confirmation')
-    ))
-    ->add('save', SubmitType::class, array('label' => 'Change password',
-    'attr' => array('class' => 'btn btn-primary')))->getForm();
+    $form = $this->createForm(ChangePasswordType::class, $user);
 
     $form->handleRequest($request);
 
@@ -365,26 +313,21 @@ class UserController extends Controller {
    * @Route("/user/delete/{id}", name="user_delete")
    */
   public function deleteAction (Request $request, $id) {
-      $em = $this->getDoctrine()->getManager();
-      $user = $em->getRepository('AppBundle:User')->find($id);
+    $user = $this->findUser($id);
+    
+    if ($id == $this->getUser()->getId()) {
+      $this->addFlash('notice', 'You can\'t delete yourself!');
+      return $this->redirectToRoute('user_index');
+    }
 
-      if (is_null($user)) {
-          throw $this->createNotFoundException(
-              "user $id does not exist"
-          );
-      }
+    $em = $this->getDoctrine()->getManager();
 
-      if ($id == $this->getUser()->getId()) {
-        $this->addFlash('notice', 'You can\'t delete yourself!');
-        return $this->redirectToRoute('user_index');
-      }
+    $em->remove($user);
+    $em->flush();
 
-      $em->remove($user);
-      $em->flush();
+    $this->addFlash('notice', 'user deleted');
 
-      $this->addFlash('notice', 'user deleted');
-
-      return $this->redirect($request->server->get('HTTP_REFERER'));
+    return $this->redirect($request->server->get('HTTP_REFERER'));
   }
 
   /**
@@ -393,11 +336,7 @@ class UserController extends Controller {
   public function forgotPasswordAction (Request $request) {
     $reset_password = new ResetPassword;
 
-    $form = $this->createFormBuilder($reset_password)
-    ->add('email', TextType::class,
-      array('attr' => array('class' => 'form-control')))
-    ->add('save', SubmitType::class, array('label' => 'Submit',
-    'attr' => array('class' => 'btn btn-primary')))->getForm();
+    $form = $this->createForm(ForgotPasswordType::class, $reset_password);
 
     $form->handleRequest($request);
 
@@ -411,7 +350,7 @@ class UserController extends Controller {
         $reset_token = $user->generateToken();
 
         $encoder = $this->container->get('security.password_encoder');
-        $encoded = $encoder->encodePassword($reset_token);
+        $encoded = $encoder->encodePassword($user, $reset_token);
 
         $user->setResetDigest($encoded);
         $user->setResetSentAt(new \DateTime());
@@ -447,24 +386,14 @@ class UserController extends Controller {
     ]);
   }
 
-  private function makeForm ($user, $submit_text) {
-    $form = $this->createFormBuilder($user)
-    ->add('username', TextType::class,
-      array('attr' => array('class' => 'form-control')))
-    ->add('email', TextType::class,
-      array('attr' => array('class' => 'form-control')))
-    ->add('plain_password', RepeatedType::class, array(
-      'type' => PasswordType::class,
-      'invalid_message' => 'The password fields must match.',
-      'options' => array('attr' => array('class' => 'form-control')),
-      'required' => true,
-      'first_options' => array('label' => 'Password'),
-      'second_options' => array('label' => 'Password confirmation')
-    ))
-    ->add('save', SubmitType::class, array('label' => $submit_text,
-    'attr' => array('class' => 'btn btn-primary')))->getForm();
+  private function findUser ($id) {
+    $user = $this->getDoctrine()->getRepository('AppBundle:User')->find($id);
 
-    return $form;
+    if (is_null($user)) {
+      throw $this->createNotFoundException("User $id doesn't exist.");
+    }
+
+    return $user;
   }
 
   private function paginate ($request, $query) {

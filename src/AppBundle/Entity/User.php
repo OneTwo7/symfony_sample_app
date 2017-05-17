@@ -10,7 +10,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 /**
  * User
  *
- * @ORM\Table(name="users", indexes={@ORM\Index(name="email_idx", columns={"email"})})
+ * @ORM\Table(name="users", indexes={
+ *      @ORM\Index(name="email_idx", columns={"email"})
+ * })
  * @ORM\Entity(repositoryClass="AppBundle\Repository\UserRepository")
  * @ORM\HasLifecycleCallbacks
  */
@@ -40,8 +42,9 @@ class User implements AdvancedUserInterface, \Serializable {
     private $id;
 
     /**
-     * @ORM\OneToMany(targetEntity="Micropost", mappedBy="user",
-     cascade={"remove", "persist", "refresh", "merge", "detach"})
+     * @ORM\OneToMany(targetEntity="Micropost", mappedBy="user", cascade={
+     *      "remove", "persist", "refresh", "merge", "detach"
+     * })
      * @ORM\OrderBy({"createdAt"="desc"})
      */
     private $microposts;
@@ -53,8 +56,11 @@ class User implements AdvancedUserInterface, \Serializable {
     private $active_relationships;
 
     /**
-     * @ORM\OneToMany(targetEntity="Relationship", mappedBy="followed",
-     cascade={"remove", "persist", "refresh", "merge", "detach"})
+     * @ORM\OneToMany(
+     *      targetEntity="Relationship", mappedBy="followed", cascade={
+     *          "remove", "persist", "refresh", "merge", "detach"
+     *      }
+     * )
      */
     private $passive_relationships;
 
@@ -100,6 +106,9 @@ class User implements AdvancedUserInterface, \Serializable {
      */
     private $password;
 
+    /**
+     * @Assert\Length(max=4096)
+     */
     private $oldPassword;
 
     /**
@@ -149,37 +158,76 @@ class User implements AdvancedUserInterface, \Serializable {
      *
      * @return int
      */
-    public function getId()
-    {
+    public function getId () {
         return $this->id;
     }
 
+    /**
+     * Set microposts
+     *
+     * @param ArrayCollection $microposts
+     *
+     * @return User
+     */
     public function setMicroposts (ArrayCollection $microposts) {
         $this->microposts = $microposts;
 
         return $this;
     }
 
+    /**
+     * Get microposts
+     *
+     * @return ArrayCollection
+     */
     public function getMicroposts () {
         return $this->microposts;
     }
 
-    public function setActiveRelationships (ArrayCollection $active_relationships) {
+    /**
+     * Set active_relationships
+     *
+     * @param ArrayCollection $active_relationships
+     *
+     * @return User
+     */
+    public function setActiveRelationships (
+        ArrayCollection $active_relationships
+    ) {
         $this->active_relationships = $active_relationships;
 
         return $this;
     }
 
+    /**
+     * Get active_relationships
+     *
+     * @return ArrayCollection
+     */
     public function getActiveRelationships () {
         return $this->active_relationships;
     }
 
-    public function setPassiveRelationships (ArrayCollection $passive_relationships) {
+    /**
+     * Set passive_relationships
+     *
+     * @param ArrayCollection $passive_relationships
+     *
+     * @return User
+     */
+    public function setPassiveRelationships (
+        ArrayCollection $passive_relationships
+    ) {
         $this->passive_relationships = $passive_relationships;
 
         return $this;
     }
 
+    /**
+     * Get passive_relationships
+     *
+     * @return ArrayCollection
+     */
     public function getPassiveRelationships () {
         return $this->passive_relationships;
     }
@@ -189,10 +237,9 @@ class User implements AdvancedUserInterface, \Serializable {
      *
      * @param string $username
      *
-     * @return string
+     * @return User
      */
-    public function setUsername($username)
-    {
+    public function setUsername ($username) {
         $this->username = $username;
 
         return $this;
@@ -203,8 +250,7 @@ class User implements AdvancedUserInterface, \Serializable {
      *
      * @return string
      */
-    public function getUsername()
-    {
+    public function getUsername () {
         return $this->username;
     }
 
@@ -215,8 +261,7 @@ class User implements AdvancedUserInterface, \Serializable {
      *
      * @return User
      */
-    public function setEmail($email)
-    {
+    public function setEmail ($email) {
         $this->email = $email;
 
         return $this;
@@ -227,8 +272,7 @@ class User implements AdvancedUserInterface, \Serializable {
      *
      * @return string
      */
-    public function getEmail()
-    {
+    public function getEmail () {
         return $this->email;
     }
 
@@ -239,8 +283,7 @@ class User implements AdvancedUserInterface, \Serializable {
      *
      * @return User
      */
-    public function setPassword($password)
-    {
+    public function setPassword ($password) {
         $this->password = $password;
 
         return $this;
@@ -251,37 +294,50 @@ class User implements AdvancedUserInterface, \Serializable {
      *
      * @return string
      */
-    public function getPassword()
-    {
+    public function getPassword () {
         return $this->password;
     }
 
+    /**
+     * Set plainPassword
+     *
+     * @param string $plainPassword
+     *
+     * @return User
+     */
     public function setPlainPassword ($plainPassword) {
         $this->plainPassword = $plainPassword;
 
         return $this;
     }
 
+    /**
+     * Get plainPassword
+     *
+     * @return string
+     */
     public function getPlainPassword () {
         return $this->plainPassword;
     }
 
-    public function setPasswordConfirmation ($passwordConfirmation) {
-        $this->passwordConfirmation = $passwordConfirmation;
-
-        return $this;
-    }
-
-    public function getPasswordConfirmation () {
-        return $this->passwordConfirmation;
-    }
-
+    /**
+     * Set oldPassword
+     *
+     * @param string $oldPassword
+     *
+     * @return User
+     */
     public function setOldPassword ($oldPassword) {
         $this->oldPassword = $oldPassword;
 
         return $this;
     }
 
+    /**
+     * Get oldPassword
+     *
+     * @return string
+     */
     public function getOldPassword () {
         return $this->oldPassword;
     }
@@ -331,28 +387,6 @@ class User implements AdvancedUserInterface, \Serializable {
     }
 
     /**
-     * Set activationToken
-     *
-     * @param string $activationToken
-     *
-     * @return User
-     */
-    public function setActivationToken ($activationToken) {
-        $this->activationToken = $activationToken;
-
-        return $this;
-    }
-
-    /**
-     * Get activationToken
-     *
-     * @return string
-     */
-    public function getActivationToken () {
-        return $this->activationToken;
-    }
-
-    /**
      * Set activationDigest
      *
      * @param string $activationDigest
@@ -372,28 +406,6 @@ class User implements AdvancedUserInterface, \Serializable {
      */
     public function getActivationDigest () {
         return $this->activationDigest;
-    }
-
-    /**
-     * Set resetToken
-     *
-     * @param string $resetToken
-     *
-     * @return User
-     */
-    public function setResetToken ($resetToken) {
-        $this->resetToken = $resetToken;
-
-        return $this;
-    }
-
-    /**
-     * Get resetToken
-     *
-     * @return string
-     */
-    public function getResetToken () {
-        return $this->resetToken;
     }
 
     /**
@@ -447,8 +459,7 @@ class User implements AdvancedUserInterface, \Serializable {
      *
      * @return User
      */
-    public function setCreatedAt($createdAt)
-    {
+    public function setCreatedAt ($createdAt) {
         $this->createdAt = $createdAt;
 
         return $this;
@@ -459,8 +470,7 @@ class User implements AdvancedUserInterface, \Serializable {
      *
      * @return \DateTime
      */
-    public function getCreatedAt()
-    {
+    public function getCreatedAt () {
         return $this->createdAt;
     }
 
@@ -471,8 +481,7 @@ class User implements AdvancedUserInterface, \Serializable {
      *
      * @return User
      */
-    public function setUpdatedAt($updatedAt)
-    {
+    public function setUpdatedAt ($updatedAt) {
         $this->updatedAt = $updatedAt;
 
         return $this;
@@ -483,8 +492,7 @@ class User implements AdvancedUserInterface, \Serializable {
      *
      * @return \DateTime
      */
-    public function getUpdatedAt()
-    {
+    public function getUpdatedAt () {
         return $this->updatedAt;
     }
 

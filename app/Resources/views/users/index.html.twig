@@ -11,19 +11,7 @@
       {{ knp_pagination_render(users) }}
       <ul class="users">
         {% for user in users %}
-          <li>
-            <img src="{{ user.gravatar(50) }}" alt="{{ user.username }}"
-                 class="gravatar">
-            <a href="/user/{{ user.id }}">{{ user.username }}</a>
-            {% if is_granted('ROLE_ADMIN') %}
-              | <a href="/user/edit/{{ user.id }}"> Edit </a>
-              {% if not user.admin %}
-                | <a href="/user/delete/{{ user.id }}" class="delete">
-                  Delete
-                </a>
-              {% endif %}
-            {% endif %}
-          </li>
+          {% include './users/_user.html.twig' %}
         {% endfor %}
       </ul>
       {{ knp_pagination_render(users) }}

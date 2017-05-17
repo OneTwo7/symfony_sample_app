@@ -6,9 +6,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Entity\Micropost;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Form\Extension\Core\Type\FileType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use AppBundle\Form\MicropostType;
 
 class StaticPagesController extends Controller {
 
@@ -45,19 +43,7 @@ class StaticPagesController extends Controller {
 
     $micropost = new Micropost();
 
-    $form = $this->createFormBuilder($micropost)
-    ->add('content', TextareaType::class,
-      array('label' => false, 'attr' => array(
-        'class' => 'form-control',
-        'rows' => '4',
-        'placeholder' => 'Compose new micropost...'
-      )))
-    ->add('save', SubmitType::class, array('label' => 'Post',
-    'attr' => array('class' => 'btn btn-block btn-primary')))
-    ->add('picture', FileType::class, array(
-      'label' => false, 'required' => false
-    ))
-    ->getForm();
+    $form = $this->createForm(MicropostType::class, $micropost);
 
     $form->handleRequest($request);
 

@@ -12,7 +12,7 @@
 	      </h1>
 	    </section>
 	    <section class="stats">
-	      {% include './partials/stats.html.twig' %}
+	      {% include './partials/_stats.html.twig' %}
 	    </section>
 	  </aside>
 	  <div class="col-md-8">
@@ -23,7 +23,7 @@
 		  	<h3>Microposts ({{ count }})</h3>
 	      <ol class="microposts">
 		    {% for micropost in microposts %}
-		      {% include "./microposts/micropost.html.twig" %}
+		      {% include "./microposts/_micropost.html.twig" %}
 		    {% endfor %}
 		    </ol>
 		    <p>Pagination</p>

@@ -9,7 +9,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
   </head>
   <body>
-    {% include "./partials/header.html.twig" %}
+    {% include "./partials/_header.html.twig" %}
     <div class="container">
       {% set flashes = app.session.flashbag.get('notice') %}
       {% if flashes %}
@@ -18,7 +18,7 @@
         {% endfor %}
       {% endif %}
       {% block body %}{% endblock %}
-      {% include "./partials/footer.html.twig" %}
+      {% include "./partials/_footer.html.twig" %}
     </div>
 
     <script

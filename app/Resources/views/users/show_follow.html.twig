@@ -13,7 +13,7 @@
         <span><b>Microposts:</b> {{ user.microposts|length }}</span>
       </section>
       <section class="stats">
-        {% include './partials/stats.html.twig' %}
+        {% include './partials/_stats.html.twig' %}
         {% if users|length %}
           <div class="user_avatars">
             {% for user in gravatars %}
