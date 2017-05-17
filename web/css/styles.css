@@ -6928,10 +6928,19 @@ input {
   .microposts .content {
     display: block;
     margin-left: 60px; }
+    .microposts .content a {
+      cursor: pointer; }
     .microposts .content img {
       width: 400px;
       display: block;
       padding: 5px 0; }
+    .microposts .content .modal-dialog {
+      width: fit-content;
+      width: -moz-fit-content;
+      width: -webkit-fit-content; }
+    .microposts .content .modal-content img {
+      width: auto;
+      max-width: 80vw; }
   .microposts .timestamp {
     color: #999;
     display: block;

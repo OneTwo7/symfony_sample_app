@@ -1,0 +1,12 @@
+<div class="modal fade" id="modal-{{ micropost.id }}" tabindex="-1" role="dialog" aria-labelledby="modal-{{ micropost.id }}-label">
+  <div class="modal-dialog modal-lg" role="document">
+    <a data-dismiss="modal">
+      <div class="modal-content">
+        <div class="modal-body">
+          <img src="{{ asset(micropost.picture) }}"
+               alt="Micropost {{ micropost.id }} picture">
+        </div>
+      </div>
+    </a>
+  </div>
+</div>

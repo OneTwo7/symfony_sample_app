@@ -7,14 +7,17 @@
   <span class="content">
     {{ micropost.content }}
     {% if micropost.picture %}
-      <img src="{{ asset(micropost.picture) }}"
-           alt="Micropost {{ micropost.id }} picture">
+      <a data-target="#modal-{{ micropost.id }}" data-toggle="modal">
+        <img src="{{ asset(micropost.picture) }}"
+             alt="Micropost {{ micropost.id }} picture">
+      </a>
+      {% include './partials/_picture_modal.html.twig' %}
     {% endif %}
   </span>
   <span class="timestamp">
     Posted {{ micropost.createdAt | date('F j, Y, g:i a') }}.
     {% if is_granted('ROLE_ADMIN') or micropost.user.id == user.id %}
-    	<a href="/micropost/delete/{{ micropost.id }}">delete</a>
+    	<a href="/micropost/delete/{{ micropost.id }}" class="delete">delete</a>
     {% endif %}
   </span>
 </li>

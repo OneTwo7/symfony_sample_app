@@ -21,12 +21,14 @@ class AccountActivationController extends Controller {
     $user = $this->getDoctrine()->getRepository('AppBundle:User')
     ->findOneByEmail($email);
 
+    $activationDigest = $user->getActivationDigest();
+
     if (!$user->getActivated() &&
-    		$user->validateToken($activationToken, 'activation')) {
+        $this->validateToken($user, $activationToken, $activationDigest)) {
+
     	$user->setActivated(true);
 
     	$em = $this->getDoctrine()->getManager();
-      $em->persist($user);
       $em->flush();
     } else {
     	$this->addFlash('notice', 'Incorrect activation link!');
@@ -51,8 +53,10 @@ class AccountActivationController extends Controller {
     $user = $this->getDoctrine()->getRepository('AppBundle:User')
     ->findOneByEmail($email);
 
+    $resetDigest = $user->getResetDigest();
+
     if ($user->getResetSentAt() < 7200 &&
-    		$user->validateToken($resetToken, 'reset')) {
+    		$this->validateToken($user, $resetToken, $resetDigest)) {
     	$form = $this->createFormBuilder($user)
 	    ->add('plain_password', RepeatedType::class, array(
 	      'type' => PasswordType::class,
@@ -69,10 +73,10 @@ class AccountActivationController extends Controller {
 
 	    if ($form->isSubmitted() && $form->isValid()) {
 
-	      $plain_password = $form['plain_password']->getData();
+	      $plainPassword = $form['plain_password']->getData();
+        $encoded = $this->encode($user, $plainPassword);
 
-        $user->setPlainPassword($plain_password);
-        $user->setUpdatedAt(new \DateTime());
+        $user->setPassword($encoded);
 
         $em = $this->getDoctrine()->getManager();
         $em->flush();
@@ -96,6 +100,16 @@ class AccountActivationController extends Controller {
     	$this->addFlash('notice', 'Incorrect reset password link!');
     	return $this->redirectToRoute('home_page');
     }
+  }
+
+  private function validateToken ($user, $token, $hash) {
+    $encoded = $this->encode($user, $token);
+    return $encoded == $hash;
+  }
+
+  private function encode ($user, $raw) {
+    $encoder = $this->container->get('security.password_encoder');
+    return $encoder->encodePassword($user, $raw);
   }
 
 }

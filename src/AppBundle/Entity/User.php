@@ -5,7 +5,6 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\AdvancedUserInterface;
-use AppBundle\Encoder\CustomEncoder;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
@@ -29,28 +28,6 @@ class User implements AdvancedUserInterface, \Serializable {
         if ($this->getCreatedAt() == null) {
             $this->setCreatedAt(new \DateTime());
         }
-    }
-
-    /**
-     *
-     * @ORM\PrePersist
-     * @ORM\PreUpdate
-     */
-    public function encodePassword () {
-        $encoder = new CustomEncoder();
-        $raw = $this->getPlainPassword();
-        $encoded = $encoder->encodePassword($raw, null);
-        $this->setPassword($encoded);
-    }
-
-    /**
-     *
-     * @ORM\PrePersist
-     */
-    public function encodeActivationDigest () {
-        $encoder = new CustomEncoder;
-        $raw = $this->getActivationToken();
-        $this->setActivationDigest($encoder->encodePassword($raw, null));
     }
     
     /**
@@ -110,6 +87,10 @@ class User implements AdvancedUserInterface, \Serializable {
 
     /**
      * @Assert\NotBlank()
+     * @Assert\Length(
+     *      min = 6,
+     *      minMessage = "Your password is too short (min: 6 characters)"
+     * )
      * @Assert\Length(max=4096)
      */
     private $plainPassword;
@@ -566,26 +547,6 @@ class User implements AdvancedUserInterface, \Serializable {
             $result[] = $chars[rand(0, $length - 1)];
         }
         return implode("", $result);
-    }
-
-    public function validateToken ($raw, $type) {
-        $encoder = new CustomEncoder;
-        switch ($type) {
-            case 'activation':
-                $encoded = $this->getActivationDigest();
-                break;
-            case 'reset':
-                $encoded = $this->getResetDigest();
-                break;
-            default:
-                $encoded = $this->getPassword();
-        }
-        return $encoder->isPasswordValid($encoded, $raw, null);
-    }
-
-    public function encodeResetDigest ($resetToken) {
-        $encoder = new CustomEncoder;
-        $this->setResetDigest($encoder->encodePassword($resetToken, null));
     }
 
     public function gravatar ($size = 80) {

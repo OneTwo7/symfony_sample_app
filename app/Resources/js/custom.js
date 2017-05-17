@@ -8,6 +8,15 @@ function customScript () {
     }
 	});
 
+	// delete confirmation
+	var $delete_buttons = $(".delete");
+	$delete_buttons.on("click", function (event) {
+		var proceed = confirm("Are you sure you want to delete that entity?");
+		if (!proceed) {
+			event.preventDefault();
+		}
+	});
+
 	// follow button Ajax call
 	var $form = $("#follow_form form");
 	$form.submit(function (event) {

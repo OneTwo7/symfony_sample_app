@@ -230,10 +230,22 @@ input {
   .content {
     display: block;
     margin-left: 60px;
+    a {
+      cursor: pointer;
+    }
     img {
       width: 400px;
       display: block;
       padding: 5px 0;
+    }
+    .modal-dialog {
+      width: fit-content;
+      width: -moz-fit-content;
+      width: -webkit-fit-content;
+    }
+    .modal-content img {
+      width: auto;
+      max-width: 80vw;
     }
   }
   .timestamp {

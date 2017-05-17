@@ -20,8 +20,11 @@ class UserController extends Controller {
    * @Route("/users", name="user_index")
    */
   public function indexAction (Request $request) {
-    $dql   = "SELECT u FROM AppBundle:User u ORDER BY u.id";
-    $users = $this->paginate($request, $dql);
+    $em = $this->getDoctrine()->getManager();
+    $query = $em->createQuery(
+      "SELECT u FROM AppBundle:User u ORDER BY u.id"
+    );
+    $users = $this->paginate($request, $query);
 
     return $this->render('users/index.html.twig', [
         'users' => $users,
@@ -39,16 +42,20 @@ class UserController extends Controller {
       throw $this->createNotFoundException("User $id doesn't exist.");
     }
 
+    $em = $this->getDoctrine()->getManager();
+
     $following_ids = "SELECT IDENTITY(r.followed)
-    FROM AppBundle:Relationship r WHERE r.follower = $id";
+    FROM AppBundle:Relationship r WHERE r.follower = :id";
 
     $dql = "SELECT u FROM AppBundle:User u
     WHERE u.id IN ($following_ids) ORDER BY u.createdAt";
 
-    $following = $this->paginate($request, $dql);
+    $query = $em->createQuery($dql)->setParameter('id', $user->getId());
 
-    $em = $this->getDoctrine()->getManager();
-    $users = $em->createQuery($dql)->getResult();
+    $following = $this->paginate($request, $query);
+
+    $users = $em->createQuery($dql)->setParameter('id', $user->getId())
+    ->getResult();
 
     return $this->render('users/show_follow.html.twig', [
       'title'     => 'Following',
@@ -69,16 +76,20 @@ class UserController extends Controller {
       throw $this->createNotFoundException("User $id doesn't exist.");
     }
 
+    $em = $this->getDoctrine()->getManager();
+
     $followers_ids = "SELECT IDENTITY(r.follower)
-    FROM AppBundle:Relationship r WHERE r.followed = $id";
+    FROM AppBundle:Relationship r WHERE r.followed = :id";
     
     $dql = "SELECT u FROM AppBundle:User u
     WHERE u.id IN ($followers_ids) ORDER BY u.createdAt";
 
-    $followers = $this->paginate($request, $dql);
+    $query = $em->createQuery($dql)->setParameter('id', $user->getId());
 
-    $em = $this->getDoctrine()->getManager();
-    $users = $em->createQuery($dql)->getResult();
+    $followers = $this->paginate($request, $query);
+
+    $users = $em->createQuery($dql)->setParameter('id', $user->getId())
+    ->getResult();
 
     return $this->render('users/show_follow.html.twig', [
       'title'     => 'Followers',
@@ -197,13 +208,15 @@ class UserController extends Controller {
     if ($form->isSubmitted() && $form->isValid()) {
       $username = $form['username']->getData();
       $email = $form['email']->getData();
-      $plain_password = $form['plain_password']->getData();
+      $plainPassword = $form['plain_password']->getData();
 
       $activationToken = $user->generateToken();
+      $encoder = $this->container->get('security.password_encoder');
+      $encoded = $encoder->encodePassword($user, $plainPassword);
 
       $user->setUsername($username);
       $user->setEmail($email);
-      $user->setPlainPassword($plain_password);
+      $user->setPassword($encoded);
       $user->setActivationToken($activationToken);
 
       $em = $this->getDoctrine()->getManager();
@@ -247,27 +260,42 @@ class UserController extends Controller {
     $user->setUsername($user->getUsername());
     $user->setEmail($user->getEmail());
 
-    $form = $this->makeForm($user, 'Update');
+    $form = $this->createFormBuilder($user)
+    ->add('username', TextType::class,
+      array('attr' => array('class' => 'form-control')))
+    ->add('email', TextType::class,
+      array('attr' => array('class' => 'form-control')))
+    ->add('plain_password', PasswordType::class, array(
+      'label' => 'password',
+      'attr' => array('class' => 'form-control')
+    ))
+    ->add('save', SubmitType::class, array('label' => 'Update',
+    'attr' => array('class' => 'btn btn-primary')))->getForm();
 
     $form->handleRequest($request);
 
     if ($form->isSubmitted() && $form->isValid()) {
-      $username = $form['username']->getData();
-      $email = $form['email']->getData();
-      $plain_password = $form['plain_password']->getData();
+      $encoder = $this->container->get('security.password_encoder');
+      $plainPassword = $form['plain_password']->getData();
 
-      $user->setUsername($username);
-      $user->setEmail($email);
-      $user->setPlainPassword($plain_password);
+      if ($encoder->isPasswordValid($user, $plainPassword)) {
+        $username = $form['username']->getData();
+        $email = $form['email']->getData();
 
-      $em = $this->getDoctrine()->getManager();
-      $em->flush();
+        $user->setUsername($username);
+        $user->setEmail($email);
 
-      $this->addFlash('notice', 'Your profile has been updated.');
+        $em = $this->getDoctrine()->getManager();
+        $em->flush();
 
-      $user_id = $user->getId();
+        $this->addFlash('notice', 'Your profile has been updated.');
 
-      return $this->redirectToRoute('user_show', array('id' => $user_id));
+        $user_id = $user->getId();
+
+        return $this->redirectToRoute('user_show', array('id' => $user_id));
+      } else {
+        $this->addFlash('notice', 'The password is incorrect.');
+      }
     }
 
     return $this->render('users/edit.html.twig', [
@@ -304,13 +332,14 @@ class UserController extends Controller {
 
     if ($form->isSubmitted() && $form->isValid()) {
 
+      $encoder = $this->container->get('security.password_encoder');
       $oldPassword = $form['old_password']->getData();
 
-      if ($user->validateToken($oldPassword, 'password')) {
-        $plain_password = $form['plain_password']->getData();
+      if ($encoder->isPasswordValid($user, $oldPassword)) {
+        $plainPassword = $form['plain_password']->getData();
+        $encoded = $encoder->encodePassword($user, $plainPassword);
 
-        $user->setPlainPassword($plain_password);
-        $user->setUpdatedAt(new \DateTime());
+        $user->setPassword($encoded);
 
         $em = $this->getDoctrine()->getManager();
         $em->flush();
@@ -333,7 +362,7 @@ class UserController extends Controller {
   /**
    * @Route("/user/delete/{id}", name="user_delete")
    */
-  public function deleteAction ($id) {
+  public function deleteAction (Request $request, $id) {
       $em = $this->getDoctrine()->getManager();
       $user = $em->getRepository('AppBundle:User')->find($id);
 
@@ -353,7 +382,7 @@ class UserController extends Controller {
 
       $this->addFlash('notice', 'user deleted');
 
-      return $this->redirectToRoute('user_index');
+      return $this->redirect($request->server->get('HTTP_REFERER'));
   }
 
   /**
@@ -379,7 +408,10 @@ class UserController extends Controller {
       if (is_object($user)) {
         $reset_token = $user->generateToken();
 
-        $user->encodeResetDigest($reset_token);
+        $encoder = $this->container->get('security.password_encoder');
+        $encoded = $encoder->encodePassword($reset_token);
+
+        $user->setResetDigest($encoded);
         $user->setResetToken($reset_token);
         $user->setResetSentAt(new \DateTime());
 
@@ -434,10 +466,7 @@ class UserController extends Controller {
     return $form;
   }
 
-  private function paginate ($request, $dql) {
-    $em    = $this->getDoctrine()->getManager();
-    $query = $em->createQuery($dql);
-
+  private function paginate ($request, $query) {
     $paginator = $this->get('knp_paginator');
 
     return $paginator->paginate(
