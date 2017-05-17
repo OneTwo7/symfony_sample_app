@@ -24,7 +24,7 @@ class AccountActivationController extends Controller {
     $activationDigest = $user->getActivationDigest();
 
     if (!$user->getActivated() &&
-        $this->validateToken($user, $activationToken, $activationDigest)) {
+        password_verify($activationToken, $activationDigest)) {
 
     	$user->setActivated(true);
 
@@ -56,7 +56,7 @@ class AccountActivationController extends Controller {
     $resetDigest = $user->getResetDigest();
 
     if ($user->getResetSentAt() < 7200 &&
-    		$this->validateToken($user, $resetToken, $resetDigest)) {
+        password_verify($resetToken, $resetDigest) {
     	$form = $this->createFormBuilder($user)
 	    ->add('plain_password', RepeatedType::class, array(
 	      'type' => PasswordType::class,
@@ -100,11 +100,6 @@ class AccountActivationController extends Controller {
     	$this->addFlash('notice', 'Incorrect reset password link!');
     	return $this->redirectToRoute('home_page');
     }
-  }
-
-  private function validateToken ($user, $token, $hash) {
-    $encoded = $this->encode($user, $token);
-    return $encoded == $hash;
   }
 
   private function encode ($user, $raw) {
