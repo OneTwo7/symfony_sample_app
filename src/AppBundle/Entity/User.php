@@ -112,14 +112,10 @@ class User implements AdvancedUserInterface, \Serializable {
      */
     private $activated = false;
 
-    private $activationToken;
-
     /**
      * @ORM\Column(type="string", length=64, nullable=true)
      */
     private $activationDigest;
-
-    private $resetToken;
 
     /**
      * @ORM\Column(type="string", length=64, nullable=true)

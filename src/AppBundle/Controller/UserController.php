@@ -103,6 +103,7 @@ class UserController extends Controller {
    * @Route("/user/{id}", name="user_show")
    */
   public function showAction (Request $request, $id) {
+
     $user = $this->getDoctrine()->getRepository('AppBundle:User')
     ->find($id);
 
@@ -213,11 +214,12 @@ class UserController extends Controller {
       $activationToken = $user->generateToken();
       $encoder = $this->container->get('security.password_encoder');
       $encoded = $encoder->encodePassword($user, $plainPassword);
+      $digest  = $encoder->encodePassword($user, $activationToken);
 
       $user->setUsername($username);
       $user->setEmail($email);
       $user->setPassword($encoded);
-      $user->setActivationToken($activationToken);
+      $user->setActivationDigest($digest);
 
       $em = $this->getDoctrine()->getManager();
       $em->persist($user);
@@ -412,7 +414,6 @@ class UserController extends Controller {
         $encoded = $encoder->encodePassword($reset_token);
 
         $user->setResetDigest($encoded);
-        $user->setResetToken($reset_token);
         $user->setResetSentAt(new \DateTime());
 
         $em = $this->getDoctrine()->getManager();

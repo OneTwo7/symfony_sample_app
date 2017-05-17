@@ -15,7 +15,7 @@ class AccountActivationController extends Controller {
 
 	/**
    * @Route("/account_activation/{activationToken}?email={email}",
-   					name="account_activation")
+   *				name="account_activation")
    */
   public function accountActivationAction ($activationToken, $email) {
     $user = $this->getDoctrine()->getRepository('AppBundle:User')
@@ -47,7 +47,9 @@ class AccountActivationController extends Controller {
   }
 
   /**
-   * @Route("/reset_password/{resetToken}?email={email}", name="reset_password")
+   * @Route(
+   *    "/reset_password/{resetToken}?email={email}", name="reset_password"
+   * )
    */
   public function resetPasswordAction (Request $request, $resetToken, $email) {
     $user = $this->getDoctrine()->getRepository('AppBundle:User')
