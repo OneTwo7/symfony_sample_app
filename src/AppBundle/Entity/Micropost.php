@@ -10,22 +10,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * @ORM\Table(name="microposts", indexes={@ORM\Index(name="micropost_idx", columns={"user_id", "created_at"})})
  * @ORM\Entity(repositoryClass="AppBundle\Repository\MicropostRepository")
- * @ORM\HasLifecycleCallbacks
  */
 class Micropost {
-
-    /**
-     *
-     * @ORM\PrePersist
-     * @ORM\PreUpdate
-     */
-    public function prepareEntity () {
-        $this->setUpdatedAt(new \DateTime());
-
-        if ($this->getCreatedAt() == null) {
-            $this->setCreatedAt(new \DateTime());
-        }
-    }
 
     /**
      * @var int
@@ -69,13 +55,6 @@ class Micropost {
      * @ORM\Column(name="created_at", type="datetime")
      */
     private $createdAt;
-
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(name="updated_at", type="datetime")
-     */
-    private $updatedAt;
 
 
     /**
@@ -183,29 +162,6 @@ class Micropost {
     {
         return $this->createdAt;
     }
-
-    /**
-     * Set updatedAt
-     *
-     * @param \DateTime $updatedAt
-     *
-     * @return Micropost
-     */
-    public function setUpdatedAt($updatedAt)
-    {
-        $this->updatedAt = $updatedAt;
-
-        return $this;
-    }
-
-    /**
-     * Get updatedAt
-     *
-     * @return \DateTime
-     */
-    public function getUpdatedAt()
-    {
-        return $this->updatedAt;
-    }
+    
 }
 

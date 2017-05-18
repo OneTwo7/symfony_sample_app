@@ -33,6 +33,7 @@ security:
             remember_me:
                 secret: '%secret%'
                 lifetime: 604800
+                secure: true
 
             pattern: ^/
             http_basic: ~

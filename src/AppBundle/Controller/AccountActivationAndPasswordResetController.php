@@ -9,7 +9,7 @@ use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Form\ResetPasswordType;
 
-class AccountActivationController extends Controller {
+class AccountActivationAndPasswordResetController extends Controller {
 
 	/**
    * @Route("/account_activation/{activationToken}?email={email}",
@@ -35,11 +35,9 @@ class AccountActivationController extends Controller {
 
     $this->addFlash('notice', 'Account activated!');
 
-    $user_id = $user->getId();
+    $this->logInUser($user);
 
-    $token = new UsernamePasswordToken($user, null, 'main', $user->getRoles());
-    $this->get('security.token_storage')->setToken($token);
-    $this->get('session')->set('_security_main', serialize($token));
+    $user_id = $user->getId();
 
     return $this->redirectToRoute('user_show', array('id' => $user_id));
   }
@@ -73,10 +71,7 @@ class AccountActivationController extends Controller {
 
         $this->addFlash('notice', 'Your password has been reset.');
 
-        $token = new UsernamePasswordToken($user, null, 'main',
-        																	 $user->getRoles());
-		    $this->get('security.token_storage')->setToken($token);
-		    $this->get('session')->set('_security_main', serialize($token));
+        $this->logInUser($user);
 
         $user_id = $user->getId();
 
@@ -90,6 +85,12 @@ class AccountActivationController extends Controller {
     	$this->addFlash('notice', 'Incorrect reset password link!');
     	return $this->redirectToRoute('home_page');
     }
+  }
+
+  private function logInUser ($user) {
+    $token = new UsernamePasswordToken($user, null, 'main', $user->getRoles());
+    $this->get('security.token_storage')->setToken($token);
+    $this->get('session')->set('_security_main', serialize($token));
   }
 
   private function encode ($user, $raw) {

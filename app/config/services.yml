@@ -4,16 +4,13 @@ parameters:
     #parameter_name: value
 
 services:
-    #service_name:
-    #    class: AppBundle\Directory\ClassName
-    #    arguments: ['@another_service_name', 'plain_value', '%parameter_name%']
   app.action_listener:
     class: AppBundle\EventListener\RememberListener
     arguments: ['@security.token_storage']
     tags:
       - { name: kernel.event_listener, event: kernel.controller, method: onKernelController }
 
-  amazon_storage:
+  app.amazon_storage:
     class: AppBundle\Services\AmazonS3Service
     arguments:
       - "%kernel.environment%"

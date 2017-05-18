@@ -19,8 +19,8 @@
 	  	{% if is_granted('ROLE_USER') %}
 	  		{% include './users/_follow_form.html.twig' %}
 	  	{% endif %}
-	  	{% if count %}
-		  	<h3>Microposts ({{ count }})</h3>
+	  	{% if microposts|length %}
+		  	<h3>Microposts ({{ microposts|length }})</h3>
 	      <ol class="microposts">
 		    {% for micropost in microposts %}
 		      {% include "./microposts/_micropost.html.twig" %}

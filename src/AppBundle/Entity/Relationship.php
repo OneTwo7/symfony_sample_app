@@ -17,22 +17,8 @@ use Doctrine\ORM\Mapping as ORM;
  *      })
  *  })
  * @ORM\Entity(repositoryClass="AppBundle\Repository\RelationshipRepository")
- * @ORM\HasLifecycleCallbacks
  */
 class Relationship {
-
-    /**
-     *
-     * @ORM\PrePersist
-     * @ORM\PreUpdate
-     */
-    public function prepareEntity () {
-        $this->setUpdatedAt(new \DateTime());
-
-        if ($this->getCreatedAt() == null) {
-            $this->setCreatedAt(new \DateTime());
-        }
-    }
 
     /**
      * @var int
@@ -61,13 +47,6 @@ class Relationship {
      * @ORM\Column(name="created_at", type="datetime")
      */
     private $createdAt;
-
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(name="updated_at", type="datetime")
-     */
-    private $updatedAt;
 
 
     /**
@@ -150,30 +129,6 @@ class Relationship {
     public function getCreatedAt()
     {
         return $this->createdAt;
-    }
-
-    /**
-     * Set updatedAt
-     *
-     * @param \DateTime $updatedAt
-     *
-     * @return Relationship
-     */
-    public function setUpdatedAt($updatedAt)
-    {
-        $this->updatedAt = $updatedAt;
-
-        return $this;
-    }
-
-    /**
-     * Get updatedAt
-     *
-     * @return \DateTime
-     */
-    public function getUpdatedAt()
-    {
-        return $this->updatedAt;
     }
 
 }

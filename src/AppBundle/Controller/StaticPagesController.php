@@ -20,12 +20,15 @@ class StaticPagesController extends Controller {
       return $this->render('static_pages/home.html.twig');
     }
 
-    // FEED
+    // Get micropost feed
     $em = $this->getDoctrine()->getManager();
     $user_id = $user->getId();
+
+    // Get ids of users that current user is following
     $following_ids = "SELECT IDENTITY(r.followed) FROM AppBundle:Relationship r
                       WHERE r.follower = $user_id";
 
+    // Get microposts of current user and their following
     $query = $em->createQuery(
       "SELECT m
       FROM AppBundle:Micropost m
@@ -41,6 +44,7 @@ class StaticPagesController extends Controller {
       10
     );
 
+    // Create form for new microposts
     $micropost = new Micropost();
 
     $form = $this->createForm(MicropostType::class, $micropost);
@@ -61,7 +65,7 @@ class StaticPagesController extends Controller {
           );
           $pictureName = 'uploads/pictures/' . $pictureName;
         } else {
-          $s3 = $this->container->get('amazon_storage');
+          $s3 = $this->container->get('app.amazon_storage');
           $pictureName = $s3->uploadImage($picture, $pictureName);
         } 
 
@@ -69,6 +73,7 @@ class StaticPagesController extends Controller {
       }
 
       $micropost->setContent($content);
+      $micropost->setCreatedAt(new \DateTime());
       $micropost->setUser($user);
 
       $em->persist($micropost);

@@ -1,6 +1,6 @@
-my_app
-======
+# Symfony Sample Application
 
-A Symfony project created on April 28, 2017, 11:27 am.
-
-In development...
+This application is based on the application developed in
+[*Ruby on Rails Tutorial*](http://railstutorial.org/)
+by [Michael Hartl](http://michaelhartl.com/)
+and written using Symfony PHP framework.

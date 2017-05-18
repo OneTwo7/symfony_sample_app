@@ -98,7 +98,6 @@ class UserController extends Controller {
 
     $relationship = new Relationship();
     $microposts = $user->getMicroposts();
-    $count = sizeof($microposts);
 
     $form = $this->createForm(FollowType::class, $relationship, array(
       'action' => $this->generateUrl('user_show', array('id' => $id))
@@ -111,6 +110,7 @@ class UserController extends Controller {
       ->getUser();
 
       $relationship->setFollower($current_user);
+      $relationship->setCreatedAt(new \DateTime());
       $relationship->setFollowed($user);
 
       $em = $this->getDoctrine()->getManager();
@@ -120,7 +120,6 @@ class UserController extends Controller {
       return $this->render('users/show.html.twig', array(
         'user' => $user,
         'microposts' => $microposts,
-        'count' => $count,
         'form' => $form->createView()
       ));
     }
@@ -128,7 +127,6 @@ class UserController extends Controller {
     return $this->render('users/show.html.twig', [
         'user' => $user,
         'microposts' => $microposts,
-        'count' => $count,
         'form' => $form->createView()
     ]);
   }
@@ -204,17 +202,11 @@ class UserController extends Controller {
       $em->persist($user);
       $em->flush();
 
-      $href = $this->get('router')->generate('account_activation', array(
-        'activationToken' => $activationToken,
-        'email' => $email
-      ), UrlGeneratorInterface::ABSOLUTE_URL);
-      $message = \Swift_Message::newInstance()
-        ->setSubject('Sample App | Account Activation')
-        ->setFrom('sample_app@example.com')
-        ->setTo("$email")
-        ->setBody($this->renderView('emails/registration.html.twig',
-            array('name' => $username, 'href' => $href)),
-            'text/html'
+      $href = $this->makeUrl(
+        'account_activation', 'activationToken', $activationToken, $email
+      );
+      $message = $this->generateMessage('Account Activation', $email,
+        'emails/registration.html.twig', $username, $href
       );
       $this->get('mailer')->send($message);
 
@@ -359,17 +351,11 @@ class UserController extends Controller {
         $em->persist($user);
         $em->flush();
 
-        $href = $this->get('router')->generate('reset_password', array(
-          'resetToken' => $reset_token,
-          'email' => $email
-        ), UrlGeneratorInterface::ABSOLUTE_URL);
-        $message = \Swift_Message::newInstance()
-          ->setSubject('Sample App | Reset Password')
-          ->setFrom('sample_app@example.com')
-          ->setTo("$email")
-          ->setBody($this->renderView('emails/reset_password.html.twig',
-              array('name' => $username, 'href' => $href)),
-              'text/html'
+        $href = $this->makeUrl(
+          'reset_password', 'resetToken', $reset_token, $email
+        );
+        $message = $this->generateMessage('Reset Password', $email,
+          'emails/reset_password.html.twig', $user->getUsername(), $href
         );
         $this->get('mailer')->send($message);
 
@@ -404,6 +390,24 @@ class UserController extends Controller {
       $request->query->getInt('page', 1),
       10
     );
+  }
+
+  private function makeUrl ($path, $tokenName, $token, $email) {
+    return $this->get('router')->generate($path, array(
+      $tokenName => $token,
+      'email' => $email
+    ), UrlGeneratorInterface::ABSOLUTE_URL);
+  }
+
+  private function generateMessage ($subject, $email, $view, $name, $href) {
+    return \Swift_Message::newInstance()
+    ->setSubject($subject)
+    ->setFrom('sample_app@example.com')
+    ->setTo($email)
+    ->setBody($this->renderView($view, array(
+      'name' => $name,
+      'href' => $href
+    )), 'text/html');
   }
 
 }

@@ -1,10 +1,10 @@
 <li>
 	<img src="{{ user.gravatar(50) }}" alt="{{ user.username }}" class="gravatar">
 	<a href="/user/{{ user.id }}">{{ user.username }}</a>
-	{% if is_granted('ROLE_ADMIN') %}
+	{% if app.user == user %}
     | <a href="/user/edit/{{ user.id }}">Edit</a>
-    {% if not user.admin %}
-      | <a href="/user/delete/{{ user.id }}" class="delete">Delete</a>
-    {% endif %}
+  {% endif %}
+  {% if is_granted('ROLE_ADMIN') and not user.admin %}
+    | <a href="/user/delete/{{ user.id }}" class="delete">Delete</a>
   {% endif %}
 </li>

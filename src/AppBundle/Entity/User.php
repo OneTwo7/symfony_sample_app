@@ -529,14 +529,16 @@ class User implements AdvancedUserInterface, \Serializable {
     public function serialize () {
         return serialize(array(
             $this->id,
-            $this->username
+            $this->username,
+            $this->email
         ));
     }
 
     public function unserialize ($serialized) {
         list (
             $this->id,
-            $this->username
+            $this->username,
+            $this->email
         ) = unserialize($serialized);
     }
 
