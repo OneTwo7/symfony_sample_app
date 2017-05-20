@@ -241,7 +241,7 @@ class UserController extends Controller {
 
           $this->addFlash('notice', 'Email with new activation link is sent.');
         }
-        
+
         return $this->redirectToRoute('home_page');
       } else {
         $this->addFlash('notice', "User with email $email is not registered!");
@@ -373,7 +373,7 @@ class UserController extends Controller {
       ->findOneByEmail($email);
 
       if (is_object($user)) {
-        $reset_token = $user->urlencode(random_bytes(22));
+        $reset_token = urlencode(random_bytes(22));
 
         $encoder = $this->container->get('security.password_encoder');
         $encoded = $encoder->encodePassword($user, $reset_token);
