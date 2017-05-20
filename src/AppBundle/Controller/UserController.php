@@ -192,7 +192,7 @@ class UserController extends Controller {
       $user->setEmail($email);
       $user->setPassword($encoded);
 
-      $activationDigest = sendAccountActivation($user, $encoder);
+      $activationDigest = $this->sendAccountActivation($user, $encoder);
 
       $user->setActivationDigest($activationDigest);
 
@@ -227,17 +227,21 @@ class UserController extends Controller {
       ->findOneByEmail($email);
 
       if (is_object($user)) {
-        $encoder = $this->container->get('security.password_encoder');
+        if ($user->getActivated()) {
+          $this->addFlash('notice', 'Your account is already activated');
+        } else {
+          $encoder = $this->container->get('security.password_encoder');
 
-        $activationDigest = $this->sendAccountActivation($user, $encoder);
+          $activationDigest = $this->sendAccountActivation($user, $encoder);
 
-        $user->setActivationDigest($activationDigest);
+          $user->setActivationDigest($activationDigest);
 
-        $em = $this->getDoctrine()->getManager();
-        $em->flush();
+          $em = $this->getDoctrine()->getManager();
+          $em->flush();
 
-        $this->addFlash('notice', 'Email with new activation link is sent.');
-
+          $this->addFlash('notice', 'Email with new activation link is sent.');
+        }
+        
         return $this->redirectToRoute('home_page');
       } else {
         $this->addFlash('notice', "User with email $email is not registered!");
