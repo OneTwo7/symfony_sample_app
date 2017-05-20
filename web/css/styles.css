@@ -6756,7 +6756,6 @@ button.close {
 }
 /*# sourceMappingURL=bootstrap.css.map */
 
-/* mixins, variables, etc. */
 /* universal */
 body {
   padding-top: 60px; }
@@ -6794,21 +6793,6 @@ p {
   font-size: 1.1em;
   line-height: 1.7em; }
 
-/* header */
-#logo {
-  float: left;
-  margin-right: 10px;
-  font-size: 1.7em;
-  color: white;
-  text-transform: uppercase;
-  letter-spacing: -1px;
-  padding-top: 9px;
-  font-weight: bold; }
-  #logo:hover {
-    color: white;
-    text-decoration: none; }
-
-/* footer */
 footer {
   margin-top: 45px;
   padding-top: 5px;
@@ -6826,6 +6810,85 @@ footer {
     footer ul li {
       float: left;
       margin-left: 15px; }
+
+input, textarea, select, .uneditable-input {
+  border: 1px solid #bbb;
+  width: 100%;
+  margin-bottom: 15px;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box; }
+
+input {
+  height: auto !important; }
+
+#remember_me {
+  display: inline-block;
+  margin-top: -10px;
+  margin-bottom: 20px;
+  width: auto;
+  margin-left: 0; }
+
+#login_submit {
+  display: block; }
+
+#logo {
+  float: left;
+  margin-right: 10px;
+  font-size: 1.7em;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+  padding-top: 9px;
+  font-weight: bold; }
+  #logo:hover {
+    color: #fff;
+    text-decoration: none; }
+
+.microposts {
+  list-style: none;
+  padding: 0; }
+  .microposts li {
+    padding: 10px 0;
+    border-top: 1px solid #e8e8e8; }
+  .microposts .user {
+    margin-top: 5em;
+    padding-top: 0; }
+  .microposts .content {
+    display: block;
+    margin-left: 60px; }
+    .microposts .content a {
+      cursor: pointer; }
+    .microposts .content img {
+      width: 400px;
+      display: block;
+      padding: 5px 0; }
+    .microposts .content .modal-dialog {
+      width: fit-content;
+      width: -moz-fit-content;
+      width: -webkit-fit-content; }
+    .microposts .content .modal-content img {
+      width: auto;
+      max-width: 80vw; }
+  .microposts .timestamp {
+    color: #999;
+    display: block;
+    margin-left: 60px; }
+  .microposts .gravatar {
+    float: left;
+    margin-right: 10px;
+    margin-top: 5px; }
+
+aside textarea {
+  height: 100px;
+  margin-bottom: 5px; }
+
+#micropost_picture {
+  margin-top: 10px;
+  border: 0; }
+
+#resend_btn {
+  margin-top: 30px; }
 
 /* Users index */
 .users {
@@ -6892,68 +6955,3 @@ aside section {
 
 .users.follow {
   padding: 0; }
-
-/* forms */
-input, textarea, select, .uneditable-input {
-  border: 1px solid #bbb;
-  width: 100%;
-  margin-bottom: 15px;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box; }
-
-input {
-  height: auto !important; }
-
-#remember_me {
-  display: inline-block;
-  margin-top: -10px;
-  margin-bottom: 20px;
-  width: auto;
-  margin-left: 0; }
-
-#login_submit {
-  display: block; }
-
-/* microposts */
-.microposts {
-  list-style: none;
-  padding: 0; }
-  .microposts li {
-    padding: 10px 0;
-    border-top: 1px solid #e8e8e8; }
-  .microposts .user {
-    margin-top: 5em;
-    padding-top: 0; }
-  .microposts .content {
-    display: block;
-    margin-left: 60px; }
-    .microposts .content a {
-      cursor: pointer; }
-    .microposts .content img {
-      width: 400px;
-      display: block;
-      padding: 5px 0; }
-    .microposts .content .modal-dialog {
-      width: fit-content;
-      width: -moz-fit-content;
-      width: -webkit-fit-content; }
-    .microposts .content .modal-content img {
-      width: auto;
-      max-width: 80vw; }
-  .microposts .timestamp {
-    color: #999;
-    display: block;
-    margin-left: 60px; }
-  .microposts .gravatar {
-    float: left;
-    margin-right: 10px;
-    margin-top: 5px; }
-
-aside textarea {
-  height: 100px;
-  margin-bottom: 5px; }
-
-#micropost_picture {
-  margin-top: 10px;
-  border: 0; }

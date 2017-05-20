@@ -2,46 +2,80 @@
 
 namespace AppBundle\DataFixtures\ORM;
 
-use Doctrine\Common\DataFixtures\FixtureInterface;
+use Doctrine\Common\DataFixtures\AbstractFixture;
+use Doctrine\Common\DataFixtures\OrderedFixtureInterface as OFI;
 use Doctrine\Common\Persistence\ObjectManager;
-use AppBundle\Entity\User;
 use AppBundle\Entity\Micropost;
 
-class LoadUserData implements FixtureInterface {
+class LoadMicropostData extends AbstractFixture implements OFI {
 
   public function load (ObjectManager $manager) {
-    $userAdmin = new User();
-    $userAdmin
-    ->setUsername('admin')
-    ->setEmail('example@railstutorial.org')
-    ->setPlainPassword('foobar')
-    ->setAdmin(true)
-    ->setActivated(true);
+    $adminMicroposts = array(
+      "Behold my administrative powers!",
+      "A witty message",
+      "Another witty message",
+      "Have anyone seen my banhammer?"
+    );
 
-    $users = array();
-    for ($i = 0; $i < 50; $i++) {
-    	$user = new User();
-    	$user
-    	->setUsername('user-' . $i)
-	    ->setEmail('user-' . $i . '@example.com')
-	    ->setPlainPassword('foobar')
-	    ->setActivated(true);
+    $genericMicroposts = array(
+      "A generic message",
+      "Another generic message",
+      "Not such a witty message"
+    );
 
-	    $users[] = $user;
+    $names = array(
+      "John",
+      "Mary",
+      "Ann",
+      "Tim"
+    );
+
+    $microposts = array();
+
+    foreach ($adminMicroposts as $micropostContent) {
+      $micropost = new Micropost();
+      $micropost
+      ->setContent($micropostContent)
+      ->setCreatedAt($this->getDateTime())
+      ->setUser($this->getReference('admin'));
+
+      $microposts[] = $micropost;
     }
 
-    $manager->persist($userAdmin);
+    foreach ($names as $name) {
+      foreach ($genericMicroposts as $micropostContent) {
+        $micropost = new Micropost();
+        $micropost
+        ->setContent($micropostContent)
+        ->setCreatedAt($this->getDateTime())
+        ->setUser($this->getReference($name));
 
-    foreach ($users as $user) {
-    	$manager->persist($user);
+        $microposts[] = $micropost;
+      }
+
+      $micropost = new Micropost();
+
+      $micropost
+      ->setContent("My name is $name. That much I can tell.")
+      ->setCreatedAt($this->getDateTime())
+      ->setUser($this->getReference($name));
+
+      $microposts[] = $micropost;
     }
 
-    $micropost = new Micropost();
-    $micropost->setContent('Hello, everyone!');
-    $micropost->setUser($userAdmin);
+    foreach ($microposts as $micropost) {
+    	$manager->persist($micropost);
+    }
 
-    $manager->persist($micropost);
     $manager->flush();
+  }
+
+  public function getOrder () {
+    return 2;
+  }
+
+  private function getDateTime () {
+    return (new \DateTime())->sub(new \DateInterval('PT'.mt_rand(1, 100).'H'));
   }
 
 }

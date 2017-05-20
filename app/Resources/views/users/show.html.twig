@@ -20,13 +20,13 @@
 	  		{% include './users/_follow_form.html.twig' %}
 	  	{% endif %}
 	  	{% if microposts|length %}
-		  	<h3>Microposts ({{ microposts|length }})</h3>
+		  	<h3>Microposts ({{ user.microposts|length }})</h3>
 	      <ol class="microposts">
 		    {% for micropost in microposts %}
 		      {% include "./microposts/_micropost.html.twig" %}
 		    {% endfor %}
 		    </ol>
-		    <p>Pagination</p>
+		    {{ knp_pagination_render(microposts) }}
 			{% endif %}
 		</div>
 	</div>

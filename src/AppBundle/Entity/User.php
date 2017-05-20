@@ -544,17 +544,6 @@ class User implements AdvancedUserInterface, \Serializable {
 
     // Custom methods
 
-    public function generateToken () {
-        $result = array();
-        $chars =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890-_";
-        $length = strlen($chars);
-        for ($i = 0; $i < 22; $i++) {
-            $result[] = $chars[rand(0, $length - 1)];
-        }
-        return implode("", $result);
-    }
-
     public function gravatar ($size = 80) {
         $email = $this->getEmail();
         return "https://www.gravatar.com/avatar/" . 

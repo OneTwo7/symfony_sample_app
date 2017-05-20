@@ -96,12 +96,13 @@ class UserController extends Controller {
   public function showAction (Request $request, $id) {
     $user = $this->findUser($id);
 
-    $relationship = new Relationship();
-    $microposts = $user->getMicroposts();
+    $em = $this->getDoctrine()->getManager();
 
-    $form = $this->createForm(FollowType::class, $relationship, array(
-      'action' => $this->generateUrl('user_show', array('id' => $id))
-    ));
+    $microposts = $this->getMicroposts($user, $em, $request);
+
+    $relationship = new Relationship();
+
+    $form = $this->createFollowForm($relationship, $id);
 
     $form->handleRequest($request);
 
@@ -134,7 +135,7 @@ class UserController extends Controller {
   /**
    * @Route("/user/unfollow/{id}", name="user_unfollow")
    */
-  public function unfollowAction ($id) {
+  public function unfollowAction (Request $request, $id) {
     $user = $this->findUser($id);
 
     $current_user = $this->get('security.token_storage')->getToken()
@@ -152,23 +153,19 @@ class UserController extends Controller {
       'user_id' => $id
     ));
 
-    $relationship = $query->getResult()[0];
+    $relationship = $query->getSingleResult();
 
     $em->remove($relationship);
     $em->flush();
 
-    $microposts = $user->getMicroposts();
-    $count = sizeof($microposts);
+    $microposts = $this->getMicroposts($user, $em, $request);
 
-    $form = $this->createFormBuilder($relationship)
-    ->setAction($this->generateUrl('user_show', array('id' => $id)))
-    ->add('save', SubmitType::class, array('label' => 'Follow',
-    'attr' => array('class' => 'btn btn-block btn-primary')))->getForm();
+    $relationship = new Relationship();
+    $form = $this->createFollowForm($relationship, $id);
 
     return $this->render('users/show.html.twig', array(
       'user' => $user,
       'microposts' => $microposts,
-      'count' => $count,
       'form' => $form->createView()
     ));
   }
@@ -188,27 +185,20 @@ class UserController extends Controller {
       $email = $form['email']->getData();
       $plainPassword = $form['plain_password']->getData();
 
-      $activationToken = $user->generateToken();
       $encoder = $this->container->get('security.password_encoder');
       $encoded = $encoder->encodePassword($user, $plainPassword);
-      $digest  = $encoder->encodePassword($user, $activationToken);
 
       $user->setUsername($username);
       $user->setEmail($email);
       $user->setPassword($encoded);
-      $user->setActivationDigest($digest);
+
+      $activationDigest = sendAccountActivation($user, $encoder);
+
+      $user->setActivationDigest($activationDigest);
 
       $em = $this->getDoctrine()->getManager();
       $em->persist($user);
       $em->flush();
-
-      $href = $this->makeUrl(
-        'account_activation', 'activationToken', $activationToken, $email
-      );
-      $message = $this->generateMessage('Account Activation', $email,
-        'emails/registration.html.twig', $username, $href
-      );
-      $this->get('mailer')->send($message);
 
       $this->addFlash('notice', 'Check email to activate your account!');
 
@@ -221,7 +211,47 @@ class UserController extends Controller {
   }
 
   /**
-   * @Route("user/edit/{id}", name="user_edit")
+   * @Route("/resend_activation", name="resend_activation")
+   */
+  public function resendActivationAction (Request $request) {
+    $resendActivation = new ResetPassword();
+
+    $form = $this->createForm(ForgotPasswordType::class, $resendActivation);
+
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+      $email = $form['email']->getData();
+
+      $user = $this->getDoctrine()->getRepository('AppBundle:User')
+      ->findOneByEmail($email);
+
+      if (is_object($user)) {
+        $encoder = $this->container->get('security.password_encoder');
+
+        $activationDigest = $this->sendAccountActivation($user, $encoder);
+
+        $user->setActivationDigest($activationDigest);
+
+        $em = $this->getDoctrine()->getManager();
+        $em->flush();
+
+        $this->addFlash('notice', 'Email with new activation link is sent.');
+
+        return $this->redirectToRoute('home_page');
+      } else {
+        $this->addFlash('notice', "User with email $email is not registered!");
+      }
+    }
+
+    return $this->render('users/email_form.html.twig', [
+      'form'  => $form->createView(),
+      'title' => 'Resend Activation'
+    ]);
+  }
+
+  /**
+   * @Route("/user/edit/{id}", name="user_edit")
    */
   public function editAction (Request $request, $id) {
     $user = $this->findUser($id);
@@ -339,7 +369,7 @@ class UserController extends Controller {
       ->findOneByEmail($email);
 
       if (is_object($user)) {
-        $reset_token = $user->generateToken();
+        $reset_token = $user->urlencode(random_bytes(22));
 
         $encoder = $this->container->get('security.password_encoder');
         $encoded = $encoder->encodePassword($user, $reset_token);
@@ -367,10 +397,12 @@ class UserController extends Controller {
       }
     }
 
-    return $this->render('users/forgot_password.html.twig', [
-      'form' => $form->createView()
+    return $this->render('users/email_form.html.twig', [
+      'form'  => $form->createView(),
+      'title' => 'Forgot Password'
     ]);
   }
+
 
   private function findUser ($id) {
     $user = $this->getDoctrine()->getRepository('AppBundle:User')->find($id);
@@ -408,6 +440,39 @@ class UserController extends Controller {
       'name' => $name,
       'href' => $href
     )), 'text/html');
+  }
+
+  private function sendAccountActivation ($user, $encoder) {
+    $activationToken  = urlencode(random_bytes(22));
+    $activationDigest = $encoder->encodePassword($user, $activationToken);
+
+    $email    = $user->getEmail();
+    $username = $user->getUsername();
+
+    $href = $this->makeUrl(
+      'account_activation', 'activationToken', $activationToken, $email
+    );
+    $message = $this->generateMessage('Account Activation', $email,
+      'emails/registration.html.twig', $username, $href
+    );
+    $this->get('mailer')->send($message);
+
+    return $activationDigest;
+  }
+
+  private function getMicroposts ($user, $em, $request) {
+    $dql = "SELECT m FROM AppBundle:Micropost m
+    WHERE m.user = :id ORDER BY m.createdAt";
+
+    $query = $em->createQuery($dql)->setParameter('id', $user->getId());
+
+    return $this->paginate($request, $query);
+  }
+
+  private function createFollowForm ($relationship, $id) {
+    return $this->createForm(FollowType::class, $relationship, array(
+      'action' => $this->generateUrl('user_show', array('id' => $id))
+    ));
   }
 
 }
