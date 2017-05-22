@@ -100,6 +100,9 @@ class UserController extends Controller {
 
     $microposts = $this->getMicroposts($user, $em, $request);
 
+    $current_user = $this->get('security.token_storage')->getToken()
+    ->getUser();
+
     $relationship = new Relationship();
 
     $form = $this->createFollowForm($relationship, $id);
@@ -121,13 +124,19 @@ class UserController extends Controller {
       return $this->render('users/show.html.twig', array(
         'user' => $user,
         'microposts' => $microposts,
+        'is_following' => true,
         'form' => $form->createView()
       ));
     }
 
+    $relationship = $this->findRelationship($em, $current_user, $user);
+
+    $isFollowing = is_null($relationship) ? false : true;
+
     return $this->render('users/show.html.twig', [
         'user' => $user,
         'microposts' => $microposts,
+        'is_following' => $isFollowing,
         'form' => $form->createView()
     ]);
   }
@@ -143,17 +152,7 @@ class UserController extends Controller {
 
     $em = $this->getDoctrine()->getManager();
 
-    $query = $em->createQuery(
-      'SELECT r
-      FROM AppBundle:Relationship r
-      WHERE r.follower = :current_user_id AND
-      r.followed = :user_id'
-    )->setParameters(array(
-      'current_user_id' => $current_user->getId(),
-      'user_id' => $id
-    ));
-
-    $relationship = $query->getSingleResult();
+    $relationship = $this->findRelationship($em, $current_user, $user);
 
     $em->remove($relationship);
     $em->flush();
@@ -166,6 +165,7 @@ class UserController extends Controller {
     return $this->render('users/show.html.twig', array(
       'user' => $user,
       'microposts' => $microposts,
+      'is_following' => false,
       'form' => $form->createView()
     ));
   }
@@ -466,7 +466,7 @@ class UserController extends Controller {
 
   private function getMicroposts ($user, $em, $request) {
     $dql = "SELECT m FROM AppBundle:Micropost m
-    WHERE m.user = :id ORDER BY m.createdAt";
+    WHERE m.user = :id ORDER BY m.createdAt DESC";
 
     $query = $em->createQuery($dql)->setParameter('id', $user->getId());
 
@@ -477,6 +477,20 @@ class UserController extends Controller {
     return $this->createForm(FollowType::class, $relationship, array(
       'action' => $this->generateUrl('user_show', array('id' => $id))
     ));
+  }
+
+  private function findRelationship ($em, $current_user, $user) {
+    $query = $em->createQuery(
+      'SELECT r
+      FROM AppBundle:Relationship r
+      WHERE r.follower = :current_user_id AND
+      r.followed = :user_id'
+    )->setParameters(array(
+      'current_user_id' => $current_user->getId(),
+      'user_id' => $user->getId()
+    ));
+
+    return $query->getOneOrNullResult();
   }
 
 }

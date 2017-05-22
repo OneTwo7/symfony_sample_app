@@ -550,14 +550,4 @@ class User implements AdvancedUserInterface, \Serializable {
                 md5(strtolower(trim($email))) . "?s=" . $size;
     }
 
-    public function isFollowing ($user) {
-        $rels = $this->getActiveRelationships();
-        foreach ($rels as $rel) {
-            if ($rel->getFollowed() == $user) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 }

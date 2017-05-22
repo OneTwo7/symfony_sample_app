@@ -1,7 +1,7 @@
 {% set current_user = app.user %}
 {% if user != current_user %}
   <div id="follow_form">
-  {% if current_user.isFollowing(user) %}
+  {% if is_following %}
     <a href="/user/unfollow/{{ user.id }}" class="btn btn-default btn-block">
     	Unfollow
     </a>
