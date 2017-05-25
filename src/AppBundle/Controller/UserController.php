@@ -154,8 +154,10 @@ class UserController extends Controller {
 
     $relationship = $this->findRelationship($em, $current_user, $user);
 
-    $em->remove($relationship);
-    $em->flush();
+    if (!is_null($relationship) {
+      $em->remove($relationship);
+      $em->flush();
+    }
 
     $microposts = $this->getMicroposts($user, $em, $request);
 

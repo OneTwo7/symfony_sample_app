@@ -13,7 +13,6 @@ services:
   app.amazon_storage:
     class: AppBundle\Services\AmazonS3Service
     arguments:
-      - "%kernel.environment%"
       - "%env(S3_BUCKET)%"
       - s3arguments:
         version: "latest"

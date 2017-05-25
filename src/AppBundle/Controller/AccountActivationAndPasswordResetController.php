@@ -65,6 +65,7 @@ class AccountActivationAndPasswordResetController extends Controller {
         $encoded = $this->encode($user, $plainPassword);
 
         $user->setPassword($encoded);
+        $user->setResetDigest(null);
 
         $em = $this->getDoctrine()->getManager();
         $em->flush();

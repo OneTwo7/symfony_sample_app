@@ -22,17 +22,10 @@ class AmazonS3Service {
   private $bucket;
 
   /**
-   * @var string
-   */
-  private $env;
-
-  /**
-   * @param string $env
    * @param string $bucket
    * @param array  $s3arguments
    */
-  public function __construct ($env, $bucket, array $s3arguments) {
-      $this->setEnvironment($env);
+  public function __construct (bucket, array $s3arguments) {
       $this->setBucket($bucket);
       $this->setClient(new S3Client($s3arguments));
   }
@@ -94,27 +87,6 @@ class AmazonS3Service {
    */
   private function setBucket ($bucket) {
       $this->bucket = $bucket;
-      return $this;
-  }
-
-  /**
-   * Getter of env
-   *
-   * @return string
-   */
-  protected function getEnvironment () {
-      return $this->env;
-  }
-
-  /**
-   * Setter of env
-   *
-   * @param string $env
-   *
-   * @return $this
-   */
-  private function setEnvironment ($env) {
-      $this->env = $env;
       return $this;
   }
 
