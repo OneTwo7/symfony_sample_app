@@ -154,7 +154,7 @@ class UserController extends Controller {
 
     $relationship = $this->findRelationship($em, $current_user, $user);
 
-    if (!is_null($relationship) {
+    if (!is_null($relationship)) {
       $em->remove($relationship);
       $em->flush();
     }
