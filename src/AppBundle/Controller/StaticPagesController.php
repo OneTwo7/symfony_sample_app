@@ -56,17 +56,20 @@ class StaticPagesController extends Controller {
       $picture = $micropost->getPicture();
 
       if (!is_null($picture)) {
+        // Create unique picture name with correct extension
         $pictureName = md5(uniqid()).'.'.$picture->guessExtension();
 
-        if ($this->container->get('kernel')->getEnvironment() == "dev") {
+        /*Upload picture to Amazon bucket in production or put it
+        into local folder otherwise*/
+        if ($this->container->get('kernel')->getEnvironment() == "prod") {
+          $s3 = $this->container->get('app.amazon_storage');
+          $pictureName = $s3->uploadImage($picture, $pictureName);
+        } else {
           $picture->move(
             $this->getParameter('pictures_directory'),
             $pictureName
           );
           $pictureName = 'uploads/pictures/' . $pictureName;
-        } else {
-          $s3 = $this->container->get('app.amazon_storage');
-          $pictureName = $s3->uploadImage($picture, $pictureName);
         } 
 
         $micropost->setPicture($pictureName);

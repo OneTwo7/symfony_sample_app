@@ -36,3 +36,5 @@ with your parameters:
 	heroku config:set S3_SECRET_KEY=<secret key>
 	heroku config:set S3_BUCKET=<bucket name>
 	heroku config:set S3_REGION=<region>
+
+[Application demo](https://secret-chamber-53101.herokuapp.com/)
