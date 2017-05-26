@@ -26,7 +26,6 @@ consult [Configuring a Web Server](http://symfony.com/doc/current/setup/web_serv
 	heroku create
 	git push heroku master
 	heroku run 'php app/console doctrine:schema:update --force'
-	heroku run 'php app/console doctrine:fixtures:load'
 	heroku addons:create sendgrid:starter
 
 To use Amazon S3 bucket for picture upload set up environmental variables
