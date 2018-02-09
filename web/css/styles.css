@@ -6860,7 +6860,7 @@ input {
     .microposts .content a {
       cursor: pointer; }
     .microposts .content img {
-      width: 400px;
+      width: 90%;
       display: block;
       padding: 5px 0; }
     .microposts .content .modal-dialog {
