@@ -18,7 +18,8 @@
       cursor: pointer;
     }
     img {
-      width: 90%;
+      width: 400px;
+      max-width: 70vw;
       display: block;
       padding: 5px 0;
     }
@@ -26,6 +27,7 @@
       width: fit-content;
       width: -moz-fit-content;
       width: -webkit-fit-content;
+      margin: 0 auto;
     }
     .modal-content img {
       width: auto;

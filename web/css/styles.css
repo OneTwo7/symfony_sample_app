@@ -6860,13 +6860,15 @@ input {
     .microposts .content a {
       cursor: pointer; }
     .microposts .content img {
-      width: 90%;
+      width: 400px;
+      max-width: 70vw;
       display: block;
       padding: 5px 0; }
     .microposts .content .modal-dialog {
       width: fit-content;
       width: -moz-fit-content;
-      width: -webkit-fit-content; }
+      width: -webkit-fit-content;
+      margin: 0 auto; }
     .microposts .content .modal-content img {
       width: auto;
       max-width: 80vw; }
