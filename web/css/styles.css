@@ -6839,7 +6839,7 @@ input {
   color: #fff;
   text-transform: uppercase;
   letter-spacing: -1px;
-  padding-top: 9px;
+  padding: 9px 15px;
   font-weight: bold; }
   #logo:hover {
     color: #fff;

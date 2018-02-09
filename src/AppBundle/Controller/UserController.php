@@ -440,7 +440,7 @@ class UserController extends Controller {
   private function generateMessage ($subject, $email, $view, $name, $href) {
     return \Swift_Message::newInstance()
     ->setSubject($subject)
-    ->setFrom('sample_app@example.com')
+    ->setFrom('noreply')
     ->setTo($email)
     ->setBody($this->renderView($view, array(
       'name' => $name,
