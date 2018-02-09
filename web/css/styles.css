@@ -6868,7 +6868,7 @@ input {
       width: fit-content;
       width: -moz-fit-content;
       width: -webkit-fit-content;
-      margin: 0 auto; }
+      margin: 5vh auto 0 auto; }
     .microposts .content .modal-content img {
       width: auto;
       max-width: 80vw; }
